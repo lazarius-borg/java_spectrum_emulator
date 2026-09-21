@@ -67,6 +67,10 @@ public final class SpectrumMachine {
     public void reset() {
         cpu.reset();
         memory.reset();
+        if (model == MachineModel.SPECTRUM_48K) {
+            memory.setActiveRomBank(1);
+            memory.setPagingLocked(true);
+        }
         ula.clear(7);
         beeper.reset();
         psg.reset();
@@ -97,6 +101,7 @@ public final class SpectrumMachine {
             // Step peripherals
             psg.step(stepCycles);
             tapePlayer.step(stepCycles);
+            beeper.setEarState(tapePlayer.getState() == TapePlayer.State.PLAYING && tapePlayer.getEarSignal());
 
             // Audio sampling
             if (!fastForward) {
@@ -129,6 +134,7 @@ public final class SpectrumMachine {
     public AudioMixer getAudioMixer() { return audioMixer; }
     public Keyboard getKeyboard() { return keyboard; }
     public Joystick getJoystick() { return joystick; }
+    public SpectrumIoBus getIoBus() { return ioBus; }
     public TapePlayer getTapePlayer() { return tapePlayer; }
     public MachineModel getModel() { return model; }
 

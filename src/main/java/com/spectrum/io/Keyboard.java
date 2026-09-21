@@ -36,6 +36,11 @@ public final class Keyboard {
         }
     }
 
+    public boolean isKeyPressed(int row, int bit) {
+        if (row < 0 || row >= 8 || bit < 0 || bit >= 5) return false;
+        return (halfRows[row] & (1 << bit)) == 0;
+    }
+
     /**
      * Reads keyboard matrix for a given 16-bit port where high byte A8-A15 selects rows.
      * Returns 5-bit result (bits 0-4).

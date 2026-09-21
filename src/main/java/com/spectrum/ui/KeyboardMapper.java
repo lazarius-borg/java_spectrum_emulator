@@ -124,11 +124,72 @@ public final class KeyboardMapper {
             case N     -> keyboard.setKeyPressed(Keyboard.ROW_SPACE_SS_M_N_B, 3, pressed);
             case B     -> keyboard.setKeyPressed(Keyboard.ROW_SPACE_SS_M_N_B, 4, pressed);
 
-            // Backspace -> Caps Shift + 0 (Delete on Spectrum)
-            case BACK_SPACE -> {
+            // Backspace / Delete -> Caps Shift + 0 (Delete on Spectrum)
+            case BACK_SPACE, DELETE -> {
                 keyboard.setKeyPressed(Keyboard.ROW_CS_Z_X_C_V, 0, pressed);
                 keyboard.setKeyPressed(Keyboard.ROW_0_9_8_7_6, 0, pressed);
             }
+
+            // Escape -> Caps Shift + Space (Break on Spectrum)
+            case ESCAPE -> {
+                keyboard.setKeyPressed(Keyboard.ROW_CS_Z_X_C_V, 0, pressed);
+                keyboard.setKeyPressed(Keyboard.ROW_SPACE_SS_M_N_B, 0, pressed);
+            }
+
+            // Caps Lock -> Caps Shift + 2
+            case CAPS -> {
+                keyboard.setKeyPressed(Keyboard.ROW_CS_Z_X_C_V, 0, pressed);
+                keyboard.setKeyPressed(Keyboard.ROW_1_2_3_4_5, 1, pressed);
+            }
+
+            // Punctuation & Symbols mapped via Symbol Shift:
+            // " -> Symbol Shift + P
+            case QUOTE -> {
+                keyboard.setKeyPressed(Keyboard.ROW_SPACE_SS_M_N_B, 1, pressed);
+                keyboard.setKeyPressed(Keyboard.ROW_P_O_I_U_Y, 0, pressed);
+            }
+            // ; -> Symbol Shift + O
+            case SEMICOLON -> {
+                keyboard.setKeyPressed(Keyboard.ROW_SPACE_SS_M_N_B, 1, pressed);
+                keyboard.setKeyPressed(Keyboard.ROW_P_O_I_U_Y, 1, pressed);
+            }
+            // , -> Symbol Shift + N
+            case COMMA -> {
+                keyboard.setKeyPressed(Keyboard.ROW_SPACE_SS_M_N_B, 1, pressed);
+                keyboard.setKeyPressed(Keyboard.ROW_SPACE_SS_M_N_B, 3, pressed);
+            }
+            // . -> Symbol Shift + M
+            case PERIOD, DECIMAL -> {
+                keyboard.setKeyPressed(Keyboard.ROW_SPACE_SS_M_N_B, 1, pressed);
+                keyboard.setKeyPressed(Keyboard.ROW_SPACE_SS_M_N_B, 2, pressed);
+            }
+            // / -> Symbol Shift + V
+            case SLASH, DIVIDE -> {
+                keyboard.setKeyPressed(Keyboard.ROW_SPACE_SS_M_N_B, 1, pressed);
+                keyboard.setKeyPressed(Keyboard.ROW_CS_Z_X_C_V, 4, pressed);
+            }
+            // - -> Symbol Shift + J
+            case MINUS, SUBTRACT -> {
+                keyboard.setKeyPressed(Keyboard.ROW_SPACE_SS_M_N_B, 1, pressed);
+                keyboard.setKeyPressed(Keyboard.ROW_ENTER_L_K_J_H, 3, pressed);
+            }
+            // = -> Symbol Shift + L
+            case EQUALS -> {
+                keyboard.setKeyPressed(Keyboard.ROW_SPACE_SS_M_N_B, 1, pressed);
+                keyboard.setKeyPressed(Keyboard.ROW_ENTER_L_K_J_H, 1, pressed);
+            }
+            // + -> Symbol Shift + K
+            case PLUS, ADD -> {
+                keyboard.setKeyPressed(Keyboard.ROW_SPACE_SS_M_N_B, 1, pressed);
+                keyboard.setKeyPressed(Keyboard.ROW_ENTER_L_K_J_H, 2, pressed);
+            }
+            // * -> Symbol Shift + B
+            case MULTIPLY, ASTERISK -> {
+                keyboard.setKeyPressed(Keyboard.ROW_SPACE_SS_M_N_B, 1, pressed);
+                keyboard.setKeyPressed(Keyboard.ROW_SPACE_SS_M_N_B, 4, pressed);
+            }
+            // ` -> Symbol Shift
+            case BACK_QUOTE -> keyboard.setKeyPressed(Keyboard.ROW_SPACE_SS_M_N_B, 1, pressed);
 
             default -> {}
         }

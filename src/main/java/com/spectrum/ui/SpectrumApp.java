@@ -17,6 +17,7 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
+import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
@@ -31,11 +32,15 @@ public final class SpectrumApp extends Application {
     private SpectrumMachine machine;
     private KeyboardMapper keyboardMapper;
     private ScreenView screenView;
+    private KeyboardView keyboardView;
     private AnimationTimer loop;
 
     private Label statusLabel;
     private Label fpsLabel;
     private Label tapeLabel;
+    private CheckMenuItem showKeyboardMenu;
+    private ToggleButton btnToggleKeyboard;
+    private String currentTapeFileName = null;
 
     private long lastTime = 0;
     private int frames = 0;
@@ -46,6 +51,7 @@ public final class SpectrumApp extends Application {
         this.machine = new SpectrumMachine();
         this.keyboardMapper = new KeyboardMapper(machine.getKeyboard(), machine.getJoystick());
         this.screenView = new ScreenView();
+        this.keyboardView = new KeyboardView(machine.getKeyboard());
 
         BorderPane root = new BorderPane();
         root.setStyle("-fx-background-color: #222222;");
@@ -54,14 +60,18 @@ public final class SpectrumApp extends Application {
         MenuBar menuBar = createMenuBar(stage);
         root.setTop(menuBar);
 
-        // 2. Center: Screen View
-        root.setCenter(screenView);
+        // 2. Center: Screen View + On-Screen Keyboard
+        VBox centerBox = new VBox(0);
+        centerBox.setAlignment(Pos.CENTER);
+        VBox.setVgrow(screenView, Priority.ALWAYS);
+        centerBox.getChildren().addAll(screenView, keyboardView);
+        root.setCenter(centerBox);
 
         // 3. Bottom: Tape Deck Toolbar & Status Bar
         HBox bottomPanel = createBottomPanel();
         root.setBottom(bottomPanel);
 
-        Scene scene = new Scene(root, 720, 560);
+        Scene scene = new Scene(root, 760, 740);
 
         // Forward keyboard events to the Spectrum
         scene.setOnKeyPressed(keyboardMapper::handleKeyPressed);
@@ -163,12 +173,32 @@ public final class SpectrumApp extends Application {
 
         audioMenu.getItems().addAll(audioEnable, new SeparatorMenuItem(), vol100, vol75, vol50);
 
-        bar.getMenus().addAll(fileMenu, machineMenu, inputMenu, audioMenu);
+        // View Menu
+        Menu viewMenu = new Menu("View");
+        showKeyboardMenu = new CheckMenuItem("Show On-Screen Keyboard");
+        showKeyboardMenu.setSelected(true);
+        showKeyboardMenu.setOnAction(e -> {
+            boolean show = showKeyboardMenu.isSelected();
+            keyboardView.setVisible(show);
+            keyboardView.setManaged(show);
+            if (btnToggleKeyboard != null) btnToggleKeyboard.setSelected(show);
+        });
+        viewMenu.getItems().add(showKeyboardMenu);
+
+        // Help Menu
+        Menu helpMenu = new Menu("Help");
+        MenuItem keyboardHelp = new MenuItem("Keyboard Mapping Reference...");
+        keyboardHelp.setOnAction(e -> showKeyboardHelp());
+        MenuItem about = new MenuItem("About ZX Spectrum Emulator");
+        about.setOnAction(e -> showAbout());
+        helpMenu.getItems().addAll(keyboardHelp, new SeparatorMenuItem(), about);
+
+        bar.getMenus().addAll(fileMenu, machineMenu, inputMenu, audioMenu, viewMenu, helpMenu);
         return bar;
     }
 
     private HBox createBottomPanel() {
-        HBox panel = new HBox(12);
+        HBox panel = new HBox(10);
         panel.setAlignment(Pos.CENTER_LEFT);
         panel.setPadding(new Insets(6, 12, 6, 12));
         panel.setStyle("-fx-background-color: #333333; -fx-text-fill: white;");
@@ -189,6 +219,15 @@ public final class SpectrumApp extends Application {
         chkInstant.setStyle("-fx-text-fill: white;");
         chkInstant.setOnAction(e -> machine.getTapePlayer().setInstantLoadingEnabled(chkInstant.isSelected()));
 
+        btnToggleKeyboard = new ToggleButton("⌨ Keyboard");
+        btnToggleKeyboard.setSelected(true);
+        btnToggleKeyboard.setOnAction(e -> {
+            boolean show = btnToggleKeyboard.isSelected();
+            keyboardView.setVisible(show);
+            keyboardView.setManaged(show);
+            if (showKeyboardMenu != null) showKeyboardMenu.setSelected(show);
+        });
+
         tapeLabel = new Label("Tape: None");
         tapeLabel.setStyle("-fx-text-fill: #A0FFA0;");
 
@@ -203,6 +242,8 @@ public final class SpectrumApp extends Application {
 
         panel.getChildren().addAll(
             btnPlay, btnPause, btnStop, btnRewind, chkInstant,
+            new Separator(javafx.geometry.Orientation.VERTICAL),
+            btnToggleKeyboard,
             new Separator(javafx.geometry.Orientation.VERTICAL),
             tapeLabel, spacer, statusLabel, fpsLabel
         );
@@ -255,6 +296,8 @@ public final class SpectrumApp extends Application {
             try {
                 List<TapFileFormat.TapBlock> blocks = TapFileFormat.load(file.toPath());
                 machine.getTapePlayer().loadTape(blocks);
+                currentTapeFileName = file.getName();
+                tapeLabel.setText(String.format("Tape: %s (%d blks)", currentTapeFileName, blocks.size()));
             } catch (Exception ex) {
                 showError("Failed to load tape", ex.getMessage());
             }
@@ -287,6 +330,82 @@ public final class SpectrumApp extends Application {
         }
     }
 
+    private void showKeyboardHelp() {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("ZX Spectrum Keyboard Mapping Reference");
+        alert.setHeaderText("Host Keyboard to ZX Spectrum Mapping");
+
+        String helpText = """
+            ZX SPECTRUM KEYBOARD MAPPING REFERENCE
+            --------------------------------------
+            • Arrow Keys (↑, ↓, ←, →):
+                Mapped to Sinclair Cursor keys (Caps Shift + 7, 6, 5, 8)
+                and Kempston / Cursor Joystick directions.
+            
+            • Enter / Return:
+                Mapped to Spectrum ENTER.
+            
+            • Backspace / Delete:
+                Mapped to Spectrum DELETE (Caps Shift + 0).
+            
+            • Shift (Left / Right):
+                Mapped to CAPS SHIFT.
+            
+            • Control / Alt / ` (Backtick):
+                Mapped to SYMBOL SHIFT.
+            
+            • Escape:
+                Mapped to BREAK (Caps Shift + Space).
+            
+            • Caps Lock:
+                Mapped to CAPS LOCK (Caps Shift + 2).
+            
+            • Direct Punctuation / Math:
+                " (Quote)        -> Symbol Shift + P
+                ; (Semicolon)    -> Symbol Shift + O
+                , (Comma)        -> Symbol Shift + N
+                . (Period)       -> Symbol Shift + M
+                / (Slash)        -> Symbol Shift + V
+                - (Minus)        -> Symbol Shift + J
+                = (Equal)        -> Symbol Shift + L
+                + (Plus)         -> Symbol Shift + K
+                * (Asterisk)     -> Symbol Shift + B
+            
+            • Interactive On-Screen Keyboard:
+                Click any key below the screen with your mouse!
+                Click CAPS SHIFT or SYM SHIFT to toggle/latch shift mode.
+                Active keys highlight in bright cyan when pressed on either
+                your host keyboard or via mouse.
+            """;
+
+        TextArea area = new TextArea(helpText);
+        area.setEditable(false);
+        area.setWrapText(true);
+        area.setPrefSize(500, 360);
+        area.setStyle("-fx-font-family: monospace; -fx-font-size: 12px;");
+
+        alert.getDialogPane().setContent(area);
+        alert.showAndWait();
+    }
+
+    private void showAbout() {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("About ZX Spectrum 128K");
+        alert.setHeaderText("ZX Spectrum 128K Emulator");
+        alert.setContentText("""
+            Cycle-accurate ZX Spectrum 128K / 48K Emulator.
+            Built with Java 26, JavaFX, and Sealed Record CPU Architecture.
+            
+            Features:
+            - Full Z80 instruction set with 100% undocumented opcodes
+            - 128K Memory Paging (Port 0x7FFD)
+            - AY-3-8912 Sound Generator & 1-bit Beeper
+            - Cycle-exact EAR/MIC tape audio and Instant ROM trap loader
+            - Interactive On-Screen Keyboard with live matrix feedback
+            """);
+        alert.showAndWait();
+    }
+
     private void showError(String title, String message) {
         Alert alert = new Alert(Alert.AlertType.ERROR, message, ButtonType.OK);
         alert.setHeaderText(title);
@@ -302,6 +421,11 @@ public final class SpectrumApp extends Application {
 
                 // Render frame
                 screenView.render(machine.getUla().getFrameBuffer());
+
+                // Update on-screen keyboard live highlights
+                if (keyboardView.isVisible()) {
+                    keyboardView.updateState();
+                }
 
                 // FPS & Status metrics
                 frames++;
@@ -320,8 +444,9 @@ public final class SpectrumApp extends Application {
                     if (tape.getBlocks().isEmpty()) {
                         tapeLabel.setText("Tape: Empty");
                     } else {
-                        tapeLabel.setText(String.format("Tape: %s [%d/%d]",
-                            tape.getState(), tape.getCurrentBlockIndex() + 1, tape.getBlocks().size()));
+                        String name = currentTapeFileName != null ? currentTapeFileName : "Loaded";
+                        tapeLabel.setText(String.format("Tape: %s [%s %d/%d]",
+                            name, tape.getState(), tape.getCurrentBlockIndex() + 1, tape.getBlocks().size()));
                     }
                 }
             }

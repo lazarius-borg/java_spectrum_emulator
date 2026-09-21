@@ -201,8 +201,15 @@ public final class TapePlayer {
      * When active, copies the requested block directly into memory and returns success!
      */
     public boolean checkRomTrap(CpuState cpu, MemoryBus memory) {
-        if (!instantLoadingEnabled || state == State.STOPPED || currentBlockIndex >= blocks.size()) {
+        if (!instantLoadingEnabled || blocks.isEmpty() || currentBlockIndex >= blocks.size()) {
             return false;
+        }
+
+        // Only active in ROM 1 (48K BASIC / Sinclair ROM LD-BYTES)
+        if (memory instanceof com.spectrum.memory.Spectrum128Memory mem128) {
+            if (mem128.getActiveRomBank() != 1) {
+                return false;
+            }
         }
 
         var r = cpu.getRegisters();
@@ -210,35 +217,54 @@ public final class TapePlayer {
 
         // 0x0556 is the entry point of LD-BYTES in standard Spectrum ROM (ROM 1 or 48K)
         if (pc == 0x0556) {
-            int requestedFlag = (r.getAFPrime() >> 8) & 0xFF;
+            int requestedFlag = r.getA();
             int startAddress = r.getIX();
             int length = r.getDE();
 
+            // Find next matching block with the requested flag
+            int searchIdx = currentBlockIndex;
+            while (searchIdx < blocks.size() && blocks.get(searchIdx).flag() != requestedFlag) {
+                searchIdx++;
+            }
+
+            if (searchIdx >= blocks.size()) {
+                return false;
+            }
+
+            currentBlockIndex = searchIdx;
             TapFileFormat.TapBlock block = blocks.get(currentBlockIndex);
             byte[] data = block.data();
 
-            if (block.flag() == requestedFlag && data.length >= length + 2) {
-                // Copy block payload to memory
-                for (int i = 0; i < length; i++) {
-                    memory.writeByte(startAddress + i, data[1 + i] & 0xFF);
-                }
+            int availableBytes = Math.max(0, data.length - 2);
+            int bytesToLoad = Math.min(length, availableBytes);
 
-                currentBlockIndex++;
-                if (currentBlockIndex >= blocks.size()) {
-                    stop();
-                }
-
-                // Emulate successful return from LD-BYTES:
-                // Carry flag set = success
-                r.setF(r.getF() | Flags.C_MASK);
-                // RET to caller: pop PC from SP
-                int sp = r.getSP();
-                int retAddr = memory.readWord(sp);
-                r.setSP((sp + 2) & 0xFFFF);
-                r.setPC(retAddr);
-
-                return true;
+            // Copy block payload to memory
+            for (int i = 0; i < bytesToLoad; i++) {
+                memory.writeByte(startAddress + i, data[1 + i] & 0xFF);
             }
+
+            currentBlockIndex++;
+            if (currentBlockIndex >= blocks.size()) {
+                stop();
+            }
+
+            // Emulate successful return from LD-BYTES:
+            // 1. IX advanced by length
+            r.setIX((startAddress + length) & 0xFFFF);
+            // 2. DE decremented to 0
+            r.setDE(0);
+            // 3. A set to 0 (checksum match)
+            r.setA(0);
+            // 4. Carry flag set = success
+            r.setF((r.getF() | Flags.C_MASK) & ~Flags.Z_MASK);
+
+            // RET to caller: pop PC from SP
+            int sp = r.getSP();
+            int retAddr = memory.readWord(sp);
+            r.setSP((sp + 2) & 0xFFFF);
+            r.setPC(retAddr);
+
+            return true;
         }
         return false;
     }

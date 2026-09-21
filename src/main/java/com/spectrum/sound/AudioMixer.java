@@ -75,10 +75,10 @@ public final class AudioMixer {
         float chC = psg.getChannelC();
 
         // Stereo mixing:
-        // Left: 0.75 * A + 0.5 * B + 0.25 * C + beep
-        // Right: 0.25 * A + 0.5 * B + 0.75 * C + beep
-        float left = (chA * 0.75f + chB * 0.50f + chC * 0.25f + beep * 0.4f) * masterVolume;
-        float right = (chA * 0.25f + chB * 0.50f + chC * 0.75f + beep * 0.4f) * masterVolume;
+        // Left: 0.6 * A + 0.4 * B + 0.2 * C + beep * 0.6
+        // Right: 0.2 * A + 0.4 * B + 0.6 * C + beep * 0.6
+        float left = (chA * 0.60f + chB * 0.40f + chC * 0.20f + beep * 0.60f) * masterVolume;
+        float right = (chA * 0.20f + chB * 0.40f + chC * 0.60f + beep * 0.60f) * masterVolume;
 
         // Clamp to [-1.0, 1.0]
         left = Math.max(-1.0f, Math.min(1.0f, left));
