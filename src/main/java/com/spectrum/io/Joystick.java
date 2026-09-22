@@ -18,13 +18,22 @@ public final class Joystick {
     private int kempstonState = 0; // Bit 0: Right, 1: Left, 2: Down, 3: Up, 4: Fire
     private final Keyboard keyboard;
 
+    private boolean left = false;
+    private boolean right = false;
+    private boolean up = false;
+    private boolean down = false;
+    private boolean fire = false;
+
     public Joystick(Keyboard keyboard) {
         this.keyboard = keyboard;
     }
 
     public void setType(JoystickType type) {
-        this.type = type;
-        reset();
+        if (this.type != type) {
+            clearKeyboardKeys();
+            this.type = type;
+            syncState();
+        }
     }
 
     public JoystickType getType() {
@@ -32,18 +41,72 @@ public final class Joystick {
     }
 
     public void reset() {
+        left = false;
+        right = false;
+        up = false;
+        down = false;
+        fire = false;
         kempstonState = 0;
+        clearKeyboardKeys();
+    }
+
+    public void setLeft(boolean pressed) {
+        this.left = pressed;
+        syncState();
+    }
+
+    public void setRight(boolean pressed) {
+        this.right = pressed;
+        syncState();
+    }
+
+    public void setUp(boolean pressed) {
+        this.up = pressed;
+        syncState();
+    }
+
+    public void setDown(boolean pressed) {
+        this.down = pressed;
+        syncState();
+    }
+
+    public void setFire(boolean pressed) {
+        this.fire = pressed;
+        syncState();
+    }
+
+    public void setDirection(boolean left, boolean right, boolean up, boolean down) {
+        this.left = left;
+        this.right = right;
+        this.up = up;
+        this.down = down;
+        syncState();
     }
 
     public void setButton(boolean left, boolean right, boolean up, boolean down, boolean fire) {
+        this.left = left;
+        this.right = right;
+        this.up = up;
+        this.down = down;
+        this.fire = fire;
+        syncState();
+    }
+
+    public boolean isLeft()  { return left; }
+    public boolean isRight() { return right; }
+    public boolean isUp()    { return up; }
+    public boolean isDown()  { return down; }
+    public boolean isFire()  { return fire; }
+
+    private void syncState() {
         switch (type) {
             case KEMPSTON -> {
                 int state = 0;
-                if (right) state |= 0x01;
-                if (left)  state |= 0x02;
-                if (down)  state |= 0x04;
-                if (up)    state |= 0x08;
-                if (fire)  state |= 0x10;
+                if (right) state |= 0x01; // Bit 0: Right
+                if (left)  state |= 0x02; // Bit 1: Left
+                if (down)  state |= 0x04; // Bit 2: Down
+                if (up)    state |= 0x08; // Bit 3: Up
+                if (fire)  state |= 0x10; // Bit 4: Fire
                 kempstonState = state;
             }
             case SINCLAIR_1 -> {
@@ -73,6 +136,21 @@ public final class Joystick {
                 keyboard.setKeyPressed(Keyboard.ROW_0_9_8_7_6, 0, fire);  // 0
             }
         }
+    }
+
+    private void clearKeyboardKeys() {
+        if (keyboard == null) return;
+        keyboard.setKeyPressed(Keyboard.ROW_0_9_8_7_6, 4, false);
+        keyboard.setKeyPressed(Keyboard.ROW_0_9_8_7_6, 3, false);
+        keyboard.setKeyPressed(Keyboard.ROW_0_9_8_7_6, 2, false);
+        keyboard.setKeyPressed(Keyboard.ROW_0_9_8_7_6, 1, false);
+        keyboard.setKeyPressed(Keyboard.ROW_0_9_8_7_6, 0, false);
+
+        keyboard.setKeyPressed(Keyboard.ROW_1_2_3_4_5, 0, false);
+        keyboard.setKeyPressed(Keyboard.ROW_1_2_3_4_5, 1, false);
+        keyboard.setKeyPressed(Keyboard.ROW_1_2_3_4_5, 2, false);
+        keyboard.setKeyPressed(Keyboard.ROW_1_2_3_4_5, 3, false);
+        keyboard.setKeyPressed(Keyboard.ROW_1_2_3_4_5, 4, false);
     }
 
     public int readKempston() {

@@ -9,13 +9,55 @@ import javafx.scene.input.KeyEvent;
  * Translates host JavaFX KeyEvents into ZX Spectrum 8x5 keyboard matrix presses
  * and joystick inputs.
  */
-public final class KeyboardMapper {
+public class KeyboardMapper {
     private final Keyboard keyboard;
     private final Joystick joystick;
+
+    public enum HostJoystickProfile {
+        ARROWS_SPACE_CTRL("Arrow Keys + Space / Ctrl"),
+        WASD_SPACE_J("WASD + Space / J (Two-Handed)"),
+        NUMPAD("Numpad 8462 + 0 / Enter"),
+        DISABLED("Disabled (Pure Keyboard)");
+
+        private final String displayName;
+
+        HostJoystickProfile(String displayName) {
+            this.displayName = displayName;
+        }
+
+        public String getDisplayName() {
+            return displayName;
+        }
+
+        @Override
+        public String toString() {
+            return displayName;
+        }
+    }
+
+    private HostJoystickProfile profile = HostJoystickProfile.ARROWS_SPACE_CTRL;
+    private boolean mapArrowsToCursorKeys = true;
 
     public KeyboardMapper(Keyboard keyboard, Joystick joystick) {
         this.keyboard = keyboard;
         this.joystick = joystick;
+    }
+
+    public HostJoystickProfile getProfile() {
+        return profile;
+    }
+
+    public void setProfile(HostJoystickProfile profile) {
+        this.profile = profile != null ? profile : HostJoystickProfile.ARROWS_SPACE_CTRL;
+        joystick.reset();
+    }
+
+    public boolean isMapArrowsToCursorKeys() {
+        return mapArrowsToCursorKeys;
+    }
+
+    public void setMapArrowsToCursorKeys(boolean map) {
+        this.mapArrowsToCursorKeys = map;
     }
 
     public void handleKeyPressed(KeyEvent event) {
@@ -26,44 +68,94 @@ public final class KeyboardMapper {
         handleKey(event.getCode(), false);
     }
 
+    public void handleKeyPressed(KeyCode code) {
+        handleKey(code, true);
+    }
+
+    public void handleKeyReleased(KeyCode code) {
+        handleKey(code, false);
+    }
+
     private void handleKey(KeyCode code, boolean pressed) {
-        // First check Joystick inputs
-        switch (code) {
-            case LEFT -> {
-                joystick.setButton(pressed, false, false, false, false);
-                // Also map to Caps Shift + 5
-                keyboard.setKeyPressed(Keyboard.ROW_CS_Z_X_C_V, 0, pressed);
-                keyboard.setKeyPressed(Keyboard.ROW_1_2_3_4_5, 4, pressed);
-                return;
+        // 1. Check Profile-specific Joystick mappings
+        if (profile == HostJoystickProfile.WASD_SPACE_J) {
+            switch (code) {
+                case A -> { joystick.setLeft(pressed); return; }
+                case D -> { joystick.setRight(pressed); return; }
+                case W -> { joystick.setUp(pressed); return; }
+                case S -> { joystick.setDown(pressed); return; }
+                case J, K -> { joystick.setFire(pressed); return; }
+                case SPACE -> {
+                    joystick.setFire(pressed);
+                    keyboard.setKeyPressed(Keyboard.ROW_SPACE_SS_M_N_B, 0, pressed);
+                    return;
+                }
+                default -> {}
             }
-            case RIGHT -> {
-                joystick.setButton(false, pressed, false, false, false);
-                // Caps Shift + 8
-                keyboard.setKeyPressed(Keyboard.ROW_CS_Z_X_C_V, 0, pressed);
-                keyboard.setKeyPressed(Keyboard.ROW_0_9_8_7_6, 2, pressed);
-                return;
+        } else if (profile == HostJoystickProfile.NUMPAD) {
+            switch (code) {
+                case NUMPAD4 -> { joystick.setLeft(pressed); return; }
+                case NUMPAD6 -> { joystick.setRight(pressed); return; }
+                case NUMPAD8 -> { joystick.setUp(pressed); return; }
+                case NUMPAD2 -> { joystick.setDown(pressed); return; }
+                case NUMPAD7 -> { joystick.setUp(pressed); joystick.setLeft(pressed); return; }
+                case NUMPAD9 -> { joystick.setUp(pressed); joystick.setRight(pressed); return; }
+                case NUMPAD1 -> { joystick.setDown(pressed); joystick.setLeft(pressed); return; }
+                case NUMPAD3 -> { joystick.setDown(pressed); joystick.setRight(pressed); return; }
+                case NUMPAD0, DECIMAL -> { joystick.setFire(pressed); return; }
+                default -> {}
             }
-            case UP -> {
-                joystick.setButton(false, false, pressed, false, false);
-                // Caps Shift + 7
-                keyboard.setKeyPressed(Keyboard.ROW_CS_Z_X_C_V, 0, pressed);
-                keyboard.setKeyPressed(Keyboard.ROW_0_9_8_7_6, 3, pressed);
-                return;
+        }
+
+        // 2. Global Arrow Keys & Control (active unless DISABLED)
+        if (profile != HostJoystickProfile.DISABLED) {
+            switch (code) {
+                case LEFT -> {
+                    joystick.setLeft(pressed);
+                    if (mapArrowsToCursorKeys) {
+                        keyboard.setKeyPressed(Keyboard.ROW_CS_Z_X_C_V, 0, pressed);
+                        keyboard.setKeyPressed(Keyboard.ROW_1_2_3_4_5, 4, pressed);
+                    }
+                    return;
+                }
+                case RIGHT -> {
+                    joystick.setRight(pressed);
+                    if (mapArrowsToCursorKeys) {
+                        keyboard.setKeyPressed(Keyboard.ROW_CS_Z_X_C_V, 0, pressed);
+                        keyboard.setKeyPressed(Keyboard.ROW_0_9_8_7_6, 2, pressed);
+                    }
+                    return;
+                }
+                case UP -> {
+                    joystick.setUp(pressed);
+                    if (mapArrowsToCursorKeys) {
+                        keyboard.setKeyPressed(Keyboard.ROW_CS_Z_X_C_V, 0, pressed);
+                        keyboard.setKeyPressed(Keyboard.ROW_0_9_8_7_6, 3, pressed);
+                    }
+                    return;
+                }
+                case DOWN -> {
+                    joystick.setDown(pressed);
+                    if (mapArrowsToCursorKeys) {
+                        keyboard.setKeyPressed(Keyboard.ROW_CS_Z_X_C_V, 0, pressed);
+                        keyboard.setKeyPressed(Keyboard.ROW_0_9_8_7_6, 4, pressed);
+                    }
+                    return;
+                }
+                case CONTROL -> {
+                    joystick.setFire(pressed);
+                    keyboard.setKeyPressed(Keyboard.ROW_SPACE_SS_M_N_B, 1, pressed);
+                    return;
+                }
+                case SPACE -> {
+                    if (profile == HostJoystickProfile.ARROWS_SPACE_CTRL) {
+                        joystick.setFire(pressed);
+                        keyboard.setKeyPressed(Keyboard.ROW_SPACE_SS_M_N_B, 0, pressed);
+                        return;
+                    }
+                }
+                default -> {}
             }
-            case DOWN -> {
-                joystick.setButton(false, false, false, pressed, false);
-                // Caps Shift + 6
-                keyboard.setKeyPressed(Keyboard.ROW_CS_Z_X_C_V, 0, pressed);
-                keyboard.setKeyPressed(Keyboard.ROW_0_9_8_7_6, 4, pressed);
-                return;
-            }
-            case CONTROL -> {
-                joystick.setButton(false, false, false, false, pressed); // Fire
-                // Also Symbol Shift
-                keyboard.setKeyPressed(Keyboard.ROW_SPACE_SS_M_N_B, 1, pressed);
-                return;
-            }
-            default -> {}
         }
 
         // Standard Spectrum keyboard mapping

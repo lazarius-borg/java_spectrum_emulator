@@ -33,13 +33,16 @@ public final class SpectrumApp extends Application {
     private KeyboardMapper keyboardMapper;
     private ScreenView screenView;
     private KeyboardView keyboardView;
+    private OnScreenJoystickView onScreenJoystickView;
     private AnimationTimer loop;
 
     private Label statusLabel;
     private Label fpsLabel;
     private Label tapeLabel;
     private CheckMenuItem showKeyboardMenu;
+    private CheckMenuItem showJoystickMenu;
     private ToggleButton btnToggleKeyboard;
+    private ToggleButton btnToggleJoystick;
     private String currentTapeFileName = null;
 
     private long lastTime = 0;
@@ -52,6 +55,7 @@ public final class SpectrumApp extends Application {
         this.keyboardMapper = new KeyboardMapper(machine.getKeyboard(), machine.getJoystick());
         this.screenView = new ScreenView();
         this.keyboardView = new KeyboardView(machine.getKeyboard());
+        this.onScreenJoystickView = new OnScreenJoystickView(machine.getJoystick());
 
         BorderPane root = new BorderPane();
         root.setStyle("-fx-background-color: #222222;");
@@ -60,18 +64,18 @@ public final class SpectrumApp extends Application {
         MenuBar menuBar = createMenuBar(stage);
         root.setTop(menuBar);
 
-        // 2. Center: Screen View + On-Screen Keyboard
+        // 2. Center: Screen View + On-Screen Joystick + Keyboard
         VBox centerBox = new VBox(0);
         centerBox.setAlignment(Pos.CENTER);
         VBox.setVgrow(screenView, Priority.ALWAYS);
-        centerBox.getChildren().addAll(screenView, keyboardView);
+        centerBox.getChildren().addAll(screenView, onScreenJoystickView, keyboardView);
         root.setCenter(centerBox);
 
         // 3. Bottom: Tape Deck Toolbar & Status Bar
-        HBox bottomPanel = createBottomPanel();
+        HBox bottomPanel = createBottomPanel(stage);
         root.setBottom(bottomPanel);
 
-        Scene scene = new Scene(root, 760, 740);
+        Scene scene = new Scene(root, 760, 780);
 
         // Forward keyboard events to the Spectrum
         scene.setOnKeyPressed(keyboardMapper::handleKeyPressed);
@@ -141,7 +145,7 @@ public final class SpectrumApp extends Application {
         // Input Menu
         Menu inputMenu = new Menu("Input");
         ToggleGroup joyGroup = new ToggleGroup();
-        RadioMenuItem kempston = new RadioMenuItem("Kempston Joystick");
+        RadioMenuItem kempston = new RadioMenuItem("Kempston Joystick (Port 0x1F)");
         RadioMenuItem sinclair1 = new RadioMenuItem("Sinclair 1 (6, 7, 8, 9, 0)");
         RadioMenuItem sinclair2 = new RadioMenuItem("Sinclair 2 (1, 2, 3, 4, 5)");
         RadioMenuItem cursor = new RadioMenuItem("Cursor / Protek (5, 6, 7, 8, 0)");
@@ -151,12 +155,38 @@ public final class SpectrumApp extends Application {
         cursor.setToggleGroup(joyGroup);
         kempston.setSelected(true);
 
-        kempston.setOnAction(e -> machine.getJoystick().setType(Joystick.JoystickType.KEMPSTON));
-        sinclair1.setOnAction(e -> machine.getJoystick().setType(Joystick.JoystickType.SINCLAIR_1));
-        sinclair2.setOnAction(e -> machine.getJoystick().setType(Joystick.JoystickType.SINCLAIR_2));
-        cursor.setOnAction(e -> machine.getJoystick().setType(Joystick.JoystickType.CURSOR));
+        kempston.setOnAction(e -> {
+            machine.getJoystick().setType(Joystick.JoystickType.KEMPSTON);
+            onScreenJoystickView.updateInfo("Mode: KEMPSTON");
+        });
+        sinclair1.setOnAction(e -> {
+            machine.getJoystick().setType(Joystick.JoystickType.SINCLAIR_1);
+            onScreenJoystickView.updateInfo("Mode: SINCLAIR 1");
+        });
+        sinclair2.setOnAction(e -> {
+            machine.getJoystick().setType(Joystick.JoystickType.SINCLAIR_2);
+            onScreenJoystickView.updateInfo("Mode: SINCLAIR 2");
+        });
+        cursor.setOnAction(e -> {
+            machine.getJoystick().setType(Joystick.JoystickType.CURSOR);
+            onScreenJoystickView.updateInfo("Mode: CURSOR");
+        });
 
-        inputMenu.getItems().addAll(kempston, sinclair1, sinclair2, cursor);
+        // Host Keyboard Profile Submenu
+        Menu profileMenu = new Menu("Host Keyboard Profile");
+        ToggleGroup profGroup = new ToggleGroup();
+        for (KeyboardMapper.HostJoystickProfile prof : KeyboardMapper.HostJoystickProfile.values()) {
+            RadioMenuItem item = new RadioMenuItem(prof.getDisplayName());
+            item.setToggleGroup(profGroup);
+            if (prof == keyboardMapper.getProfile()) item.setSelected(true);
+            item.setOnAction(ev -> keyboardMapper.setProfile(prof));
+            profileMenu.getItems().add(item);
+        }
+
+        MenuItem joySettings = new MenuItem("Joystick Settings & Tester...");
+        joySettings.setOnAction(e -> new JoystickSettingsDialog(stage, machine.getJoystick(), keyboardMapper, onScreenJoystickView).showAndWait());
+
+        inputMenu.getItems().addAll(kempston, sinclair1, sinclair2, cursor, new SeparatorMenuItem(), profileMenu, new SeparatorMenuItem(), joySettings);
 
         // Audio Menu
         Menu audioMenu = new Menu("Audio");
@@ -183,11 +213,21 @@ public final class SpectrumApp extends Application {
             keyboardView.setManaged(show);
             if (btnToggleKeyboard != null) btnToggleKeyboard.setSelected(show);
         });
-        viewMenu.getItems().add(showKeyboardMenu);
+
+        showJoystickMenu = new CheckMenuItem("Show On-Screen Joystick");
+        showJoystickMenu.setSelected(true);
+        showJoystickMenu.setOnAction(e -> {
+            boolean show = showJoystickMenu.isSelected();
+            onScreenJoystickView.setVisible(show);
+            onScreenJoystickView.setManaged(show);
+            if (btnToggleJoystick != null) btnToggleJoystick.setSelected(show);
+        });
+
+        viewMenu.getItems().addAll(showKeyboardMenu, showJoystickMenu);
 
         // Help Menu
         Menu helpMenu = new Menu("Help");
-        MenuItem keyboardHelp = new MenuItem("Keyboard Mapping Reference...");
+        MenuItem keyboardHelp = new MenuItem("Keyboard & Joystick Guide...");
         keyboardHelp.setOnAction(e -> showKeyboardHelp());
         MenuItem about = new MenuItem("About ZX Spectrum Emulator");
         about.setOnAction(e -> showAbout());
@@ -197,7 +237,7 @@ public final class SpectrumApp extends Application {
         return bar;
     }
 
-    private HBox createBottomPanel() {
+    private HBox createBottomPanel(Stage stage) {
         HBox panel = new HBox(10);
         panel.setAlignment(Pos.CENTER_LEFT);
         panel.setPadding(new Insets(6, 12, 6, 12));
@@ -228,6 +268,15 @@ public final class SpectrumApp extends Application {
             if (showKeyboardMenu != null) showKeyboardMenu.setSelected(show);
         });
 
+        btnToggleJoystick = new ToggleButton("🕹 Joystick");
+        btnToggleJoystick.setSelected(true);
+        btnToggleJoystick.setOnAction(e -> {
+            boolean show = btnToggleJoystick.isSelected();
+            onScreenJoystickView.setVisible(show);
+            onScreenJoystickView.setManaged(show);
+            if (showJoystickMenu != null) showJoystickMenu.setSelected(show);
+        });
+
         tapeLabel = new Label("Tape: None");
         tapeLabel.setStyle("-fx-text-fill: #A0FFA0;");
 
@@ -243,7 +292,7 @@ public final class SpectrumApp extends Application {
         panel.getChildren().addAll(
             btnPlay, btnPause, btnStop, btnRewind, chkInstant,
             new Separator(javafx.geometry.Orientation.VERTICAL),
-            btnToggleKeyboard,
+            btnToggleKeyboard, btnToggleJoystick,
             new Separator(javafx.geometry.Orientation.VERTICAL),
             tapeLabel, spacer, statusLabel, fpsLabel
         );
@@ -376,12 +425,35 @@ public final class SpectrumApp extends Application {
                 Click CAPS SHIFT or SYM SHIFT to toggle/latch shift mode.
                 Active keys highlight in bright cyan when pressed on either
                 your host keyboard or via mouse.
+
+            JOYSTICK SIMULATION REFERENCE
+            -----------------------------
+            • Kempston Joystick (Port 0x1F):
+                Supported by 95%+ of ZX Spectrum games. Does not interfere
+                with typing or number keys.
+            • Sinclair 1 Joystick (Port 0xFE):
+                Keys 6, 7, 8, 9 (Left, Right, Right/Down, Up) and 0 (Fire).
+            • Sinclair 2 Joystick (Port 0xFE):
+                Keys 1, 2, 3, 4 (Left, Right, Down, Up) and 5 (Fire).
+            • Cursor / Protek Joystick (Port 0xFE):
+                Keys 5, 6, 7, 8 (Left, Down, Up, Right) and 0 (Fire).
+
+            • Host Keyboard Joystick Profiles (Configurable in Input -> Joystick Settings):
+                1. Arrows + Space / L-Ctrl (Default)
+                2. WASD + Space / J (Great for left-handed steering)
+                3. Numpad 8, 4, 6, 2 + Numpad 0 / Enter
+                4. Disabled (Keyboard strictly types)
+
+            • Virtual On-Screen Joystick:
+                Click 'Joystick' in toolbar or View menu. Click and drag the
+                stick with mouse or trackpad for 8-way steering, and click
+                the red arcade FIRE button.
             """;
 
         TextArea area = new TextArea(helpText);
         area.setEditable(false);
         area.setWrapText(true);
-        area.setPrefSize(500, 360);
+        area.setPrefSize(520, 420);
         area.setStyle("-fx-font-family: monospace; -fx-font-size: 12px;");
 
         alert.getDialogPane().setContent(area);
@@ -402,6 +474,8 @@ public final class SpectrumApp extends Application {
             - AY-3-8912 Sound Generator & 1-bit Beeper
             - Cycle-exact EAR/MIC tape audio and Instant ROM trap loader
             - Interactive On-Screen Keyboard with live matrix feedback
+            - Multi-mode Joystick Simulation (Kempston, Sinclair 1/2, Cursor)
+            - On-Screen Virtual Arcade Stick and configurable Host Keyboard Profiles
             """);
         alert.showAndWait();
     }
@@ -425,6 +499,11 @@ public final class SpectrumApp extends Application {
                 // Update on-screen keyboard live highlights
                 if (keyboardView.isVisible()) {
                     keyboardView.updateState();
+                }
+
+                // Update on-screen joystick live state
+                if (onScreenJoystickView != null && onScreenJoystickView.isVisible()) {
+                    onScreenJoystickView.updateState();
                 }
 
                 // FPS & Status metrics
