@@ -12,10 +12,9 @@ public class TapeMenuTraceTest {
     @Test
     void testTraceRom1() throws Exception {
         SpectrumMachine machine = new SpectrumMachine();
-        File tapFile = new File("taps/ACEACE.TAP");
-        if (!tapFile.exists()) return;
+        List<TapFileFormat.TapBlock> blocks = TapeLoadingTest.loadTestTap("ACEACE.TAP");
+        if (blocks.isEmpty()) return;
 
-        List<TapFileFormat.TapBlock> blocks = TapFileFormat.load(tapFile.toPath());
         machine.getTapePlayer().loadTape(blocks);
 
         for (int i = 0; i < 50; i++) {

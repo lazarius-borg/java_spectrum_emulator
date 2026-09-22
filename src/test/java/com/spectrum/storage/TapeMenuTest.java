@@ -12,10 +12,9 @@ public class TapeMenuTest {
     @Test
     void testTapeLoaderFullTrace() throws Exception {
         SpectrumMachine machine = new SpectrumMachine();
-        File tapFile = new File("taps/ACEACE.TAP");
-        if (!tapFile.exists()) return;
+        List<TapFileFormat.TapBlock> blocks = TapeLoadingTest.loadTestTap("ACEACE.TAP");
+        if (blocks.isEmpty()) return;
 
-        List<TapFileFormat.TapBlock> blocks = TapFileFormat.load(tapFile.toPath());
         machine.getTapePlayer().loadTape(blocks);
 
         // Run until menu wait loop
@@ -52,10 +51,9 @@ public class TapeMenuTest {
     @Test
     void testTapeTesterAdvancement() throws Exception {
         SpectrumMachine machine = new SpectrumMachine();
-        File tapFile = new File("taps/ACEACE.TAP");
-        if (!tapFile.exists()) return;
+        List<TapFileFormat.TapBlock> blocks = TapeLoadingTest.loadTestTap("ACEACE.TAP");
+        if (blocks.isEmpty()) return;
 
-        List<TapFileFormat.TapBlock> blocks = TapFileFormat.load(tapFile.toPath());
         machine.getTapePlayer().loadTape(blocks);
 
         // Wait until menu loop 0x3683

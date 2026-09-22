@@ -15,10 +15,9 @@ public class TapeLoadingTest {
     @Test
     void testTapeLoadingRoutine() throws Exception {
         SpectrumMachine machine = new SpectrumMachine();
-        File tapFile = new File("taps/ACEACE.TAP");
-        if (!tapFile.exists()) return;
+        List<TapFileFormat.TapBlock> blocks = loadTestTap("ACEACE.TAP");
+        if (blocks.isEmpty()) return;
 
-        List<TapFileFormat.TapBlock> blocks = TapFileFormat.load(tapFile.toPath());
         machine.getTapePlayer().loadTape(blocks);
 
         // Run until boot completes and menu wait loop (0x3683 in ROM 0) is entered
@@ -85,10 +84,9 @@ public class TapeLoadingTest {
     @Test
     void testAHarvestLoading() throws Exception {
         SpectrumMachine machine = new SpectrumMachine();
-        File tapFile = new File("taps/AHARVEST.TAP");
-        if (!tapFile.exists()) return;
+        List<TapFileFormat.TapBlock> blocks = loadTestTap("AHARVEST.TAP");
+        if (blocks.isEmpty()) return;
 
-        List<TapFileFormat.TapBlock> blocks = TapFileFormat.load(tapFile.toPath());
         machine.getTapePlayer().loadTape(blocks);
 
         // Run until boot completes and menu wait loop (0x3683 in ROM 0) is entered
@@ -116,5 +114,18 @@ public class TapeLoadingTest {
 
         System.out.println("AHARVEST Tape block index after 100 frames: " + machine.getTapePlayer().getCurrentBlockIndex());
         assertThat(machine.getTapePlayer().getCurrentBlockIndex()).isGreaterThanOrEqualTo(4);
+    }
+
+    static List<TapFileFormat.TapBlock> loadTestTap(String name) throws Exception {
+        try (var is = TapeLoadingTest.class.getResourceAsStream("/taps/" + name)) {
+            if (is != null) {
+                return TapFileFormat.load(is);
+            }
+        }
+        File tapFile = new File("taps/" + name);
+        if (tapFile.exists()) {
+            return TapFileFormat.load(tapFile.toPath());
+        }
+        return List.of();
     }
 }

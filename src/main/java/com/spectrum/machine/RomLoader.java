@@ -12,6 +12,12 @@ import java.nio.file.Path;
 public final class RomLoader {
 
     public static boolean tryLoadDefaultRoms(Spectrum128Memory memory) {
+        // 1. Check embedded classpath resources (distributed with emulator)
+        if (tryLoadFromResources(memory)) {
+            return true;
+        }
+
+        // 2. Fallback to external filesystem "roms" directory
         Path romsDir = Path.of("roms");
         if (!Files.exists(romsDir)) {
             try {
@@ -61,6 +67,47 @@ public final class RomLoader {
             if (Files.exists(p)) return p;
         }
         return null;
+    }
+
+    private static boolean tryLoadFromResources(Spectrum128Memory memory) {
+        // Check for combined 32K ROM resource
+        byte[] combined = loadResourceBytes("/roms/128k.rom");
+        if (combined == null) combined = loadResourceBytes("/roms/zx128.rom");
+
+        if (combined != null && combined.length >= 32768) {
+            byte[] rom0 = new byte[16384];
+            byte[] rom1 = new byte[16384];
+            System.arraycopy(combined, 0, rom0, 0, 16384);
+            System.arraycopy(combined, 16384, rom1, 0, 16384);
+            memory.loadRom(0, rom0);
+            memory.loadRom(1, rom1);
+            return true;
+        }
+
+        // Check for separate 16K ROM files in resources
+        byte[] rom0 = loadResourceBytes("/roms/128-0.rom");
+        if (rom0 == null) rom0 = loadResourceBytes("/roms/rom0.rom");
+
+        byte[] rom1 = loadResourceBytes("/roms/128-1.rom");
+        if (rom1 == null) rom1 = loadResourceBytes("/roms/rom1.rom");
+        if (rom1 == null) rom1 = loadResourceBytes("/roms/48.rom");
+
+        if (rom0 != null && rom1 != null) {
+            memory.loadRom(0, rom0);
+            memory.loadRom(1, rom1);
+            return true;
+        }
+
+        return false;
+    }
+
+    private static byte[] loadResourceBytes(String path) {
+        try (var is = RomLoader.class.getResourceAsStream(path)) {
+            if (is == null) return null;
+            return is.readAllBytes();
+        } catch (IOException ignored) {
+            return null;
+        }
     }
 
     /**

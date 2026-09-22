@@ -28,3 +28,7 @@ target/
 .idea/
 *.iml
 
+# Local testing and external asset directories (embedded in resources for distribution)
+/taps/
+/roms/
+

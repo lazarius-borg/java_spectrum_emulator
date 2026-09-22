@@ -38,6 +38,11 @@ public final class TapFileFormat {
         return parse(bytes);
     }
 
+    public static List<TapBlock> load(java.io.InputStream is) throws IOException {
+        byte[] bytes = is.readAllBytes();
+        return parse(bytes);
+    }
+
     public static List<TapBlock> parse(byte[] bytes) {
         List<TapBlock> blocks = new ArrayList<>();
         int offset = 0;
