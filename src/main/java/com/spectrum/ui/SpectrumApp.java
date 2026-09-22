@@ -120,38 +120,45 @@ public final class SpectrumApp extends Application {
 
         // File Menu
         Menu fileMenu = new Menu("File");
-        MenuItem openTape = new MenuItem("Insert Tape (.TAP)...");
-        openTape.setOnAction(e -> chooseAndLoadTape(stage));
+        MenuItem openSnapshot = new MenuItem("Open Snapshot (.SNA, .Z80)...");
+        openSnapshot.setOnAction(e -> handleOpenSnapshot(stage));
+
         MenuItem saveSnapshot = new MenuItem("Save Snapshot (.SNA)...");
-        saveSnapshot.setOnAction(e -> saveSnapshot(stage));
-        MenuItem exit = new MenuItem("Exit");
-        exit.setOnAction(e -> {
+        saveSnapshot.setOnAction(e -> handleSaveSnapshot(stage));
+
+        MenuItem openTape = new MenuItem("Insert Tape (.TAP)...");
+        openTape.setOnAction(e -> handleOpenTape(stage));
+
+        MenuItem loadRom = new MenuItem("Load ROM File...");
+        loadRom.setOnAction(e -> handleLoadRom(stage));
+
+        MenuItem exitItem = new MenuItem("Exit");
+        exitItem.setOnAction(e -> {
             if (loop != null) loop.stop();
             machine.getAudioMixer().close();
             stage.close();
+            Platform.exit();
         });
-        fileMenu.getItems().addAll(openTape, saveSnapshot, new SeparatorMenuItem(), exit);
+
+        fileMenu.getItems().addAll(openSnapshot, saveSnapshot, new SeparatorMenuItem(), openTape, loadRom, new SeparatorMenuItem(), exitItem);
 
         // Machine Menu
         Menu machineMenu = new Menu("Machine");
         ToggleGroup modelGroup = new ToggleGroup();
         RadioMenuItem m128k = new RadioMenuItem("ZX Spectrum 128K");
-        m128k.setToggleGroup(modelGroup);
-        m128k.setSelected(true);
-        m128k.setOnAction(e -> machine.reset(MachineModel.SPECTRUM_128K));
-
         RadioMenuItem m48k = new RadioMenuItem("ZX Spectrum 48K");
+        m128k.setToggleGroup(modelGroup);
         m48k.setToggleGroup(modelGroup);
-        m48k.setOnAction(e -> machine.reset(MachineModel.SPECTRUM_48K));
+        m128k.setSelected(true);
 
-        MenuItem resetItem = new MenuItem("Hard Reset");
-        resetItem.setOnAction(e -> machine.reset(machine.getModel()));
+        m128k.setOnAction(e -> machine.setModel(MachineModel.SPECTRUM_128K));
+        m48k.setOnAction(e -> machine.setModel(MachineModel.SPECTRUM_48K));
+
+        MenuItem resetItem = new MenuItem("Reset");
+        resetItem.setOnAction(e -> machine.reset());
 
         CheckMenuItem pauseItem = new CheckMenuItem("Pause");
-        pauseItem.setOnAction(e -> {
-            if (pauseItem.isSelected()) loop.stop();
-            else loop.start();
-        });
+        pauseItem.setOnAction(e -> machine.setPaused(pauseItem.isSelected()));
 
         CheckMenuItem fastForwardItem = new CheckMenuItem("Fast Forward (Turbo)");
         fastForwardItem.setOnAction(e -> machine.setFastForward(fastForwardItem.isSelected()));
