@@ -17,6 +17,7 @@ public class KeyboardMapper {
         ARROWS_SPACE_CTRL("Arrow Keys + Space / Ctrl"),
         WASD_SPACE_J("WASD + Space / J (Two-Handed)"),
         NUMPAD("Numpad 8462 + 0 / Enter"),
+        INTERFACE_NATIVE("Interface Native Keys (1-5 / 6-0 / 5-8,0)"),
         DISABLED("Disabled (Pure Keyboard)");
 
         private final String displayName;
@@ -58,6 +59,34 @@ public class KeyboardMapper {
 
     public void setMapArrowsToCursorKeys(boolean map) {
         this.mapArrowsToCursorKeys = map;
+    }
+
+    public boolean isJoystickKey(KeyCode code) {
+        if (profile == HostJoystickProfile.DISABLED) return false;
+        if (profile == HostJoystickProfile.ARROWS_SPACE_CTRL) {
+            if (code == KeyCode.UP || code == KeyCode.DOWN || code == KeyCode.LEFT ||
+                code == KeyCode.RIGHT || code == KeyCode.SPACE || code == KeyCode.CONTROL) return true;
+        }
+        if (profile == HostJoystickProfile.WASD_SPACE_J) {
+            if (code == KeyCode.W || code == KeyCode.A || code == KeyCode.S ||
+                code == KeyCode.D || code == KeyCode.SPACE || code == KeyCode.J || code == KeyCode.K) return true;
+        }
+        if (profile == HostJoystickProfile.NUMPAD) {
+            if (code.name().startsWith("NUMPAD")) return true;
+        }
+        if (joystick.getType() == Joystick.JoystickType.SINCLAIR_1) {
+            return code == KeyCode.DIGIT6 || code == KeyCode.DIGIT7 || code == KeyCode.DIGIT8 ||
+                   code == KeyCode.DIGIT9 || code == KeyCode.DIGIT0;
+        }
+        if (joystick.getType() == Joystick.JoystickType.SINCLAIR_2) {
+            return code == KeyCode.DIGIT1 || code == KeyCode.DIGIT2 || code == KeyCode.DIGIT3 ||
+                   code == KeyCode.DIGIT4 || code == KeyCode.DIGIT5;
+        }
+        if (joystick.getType() == Joystick.JoystickType.CURSOR) {
+            return code == KeyCode.DIGIT5 || code == KeyCode.DIGIT6 || code == KeyCode.DIGIT7 ||
+                   code == KeyCode.DIGIT8 || code == KeyCode.DIGIT0;
+        }
+        return false;
     }
 
     public void handleKeyPressed(KeyEvent event) {
@@ -107,11 +136,12 @@ public class KeyboardMapper {
             }
         }
 
-        // 2. Global Arrow Keys & Control (active unless DISABLED)
+        // 2. Global Arrow Keys & Control (active unless DISABLED or INTERFACE_NATIVE)
+        boolean steerWithArrows = (profile == HostJoystickProfile.ARROWS_SPACE_CTRL);
         if (profile != HostJoystickProfile.DISABLED) {
             switch (code) {
                 case LEFT -> {
-                    joystick.setLeft(pressed);
+                    if (steerWithArrows) joystick.setLeft(pressed);
                     if (mapArrowsToCursorKeys) {
                         keyboard.setKeyPressed(Keyboard.ROW_CS_Z_X_C_V, 0, pressed);
                         keyboard.setKeyPressed(Keyboard.ROW_1_2_3_4_5, 4, pressed);
@@ -119,7 +149,7 @@ public class KeyboardMapper {
                     return;
                 }
                 case RIGHT -> {
-                    joystick.setRight(pressed);
+                    if (steerWithArrows) joystick.setRight(pressed);
                     if (mapArrowsToCursorKeys) {
                         keyboard.setKeyPressed(Keyboard.ROW_CS_Z_X_C_V, 0, pressed);
                         keyboard.setKeyPressed(Keyboard.ROW_0_9_8_7_6, 2, pressed);
@@ -127,7 +157,7 @@ public class KeyboardMapper {
                     return;
                 }
                 case UP -> {
-                    joystick.setUp(pressed);
+                    if (steerWithArrows) joystick.setUp(pressed);
                     if (mapArrowsToCursorKeys) {
                         keyboard.setKeyPressed(Keyboard.ROW_CS_Z_X_C_V, 0, pressed);
                         keyboard.setKeyPressed(Keyboard.ROW_0_9_8_7_6, 3, pressed);
@@ -135,7 +165,7 @@ public class KeyboardMapper {
                     return;
                 }
                 case DOWN -> {
-                    joystick.setDown(pressed);
+                    if (steerWithArrows) joystick.setDown(pressed);
                     if (mapArrowsToCursorKeys) {
                         keyboard.setKeyPressed(Keyboard.ROW_CS_Z_X_C_V, 0, pressed);
                         keyboard.setKeyPressed(Keyboard.ROW_0_9_8_7_6, 4, pressed);
@@ -143,12 +173,12 @@ public class KeyboardMapper {
                     return;
                 }
                 case CONTROL -> {
-                    joystick.setFire(pressed);
+                    if (steerWithArrows) joystick.setFire(pressed);
                     keyboard.setKeyPressed(Keyboard.ROW_SPACE_SS_M_N_B, 1, pressed);
                     return;
                 }
                 case SPACE -> {
-                    if (profile == HostJoystickProfile.ARROWS_SPACE_CTRL) {
+                    if (steerWithArrows) {
                         joystick.setFire(pressed);
                         keyboard.setKeyPressed(Keyboard.ROW_SPACE_SS_M_N_B, 0, pressed);
                         return;
@@ -182,18 +212,86 @@ public class KeyboardMapper {
             case T -> keyboard.setKeyPressed(Keyboard.ROW_Q_W_E_R_T, 4, pressed);
 
             // Row 3: 1, 2, 3, 4, 5
-            case DIGIT1 -> keyboard.setKeyPressed(Keyboard.ROW_1_2_3_4_5, 0, pressed);
-            case DIGIT2 -> keyboard.setKeyPressed(Keyboard.ROW_1_2_3_4_5, 1, pressed);
-            case DIGIT3 -> keyboard.setKeyPressed(Keyboard.ROW_1_2_3_4_5, 2, pressed);
-            case DIGIT4 -> keyboard.setKeyPressed(Keyboard.ROW_1_2_3_4_5, 3, pressed);
-            case DIGIT5 -> keyboard.setKeyPressed(Keyboard.ROW_1_2_3_4_5, 4, pressed);
+            case DIGIT1 -> {
+                if (joystick.getType() == Joystick.JoystickType.SINCLAIR_2) {
+                    joystick.setLeft(pressed);
+                } else {
+                    keyboard.setKeyPressed(Keyboard.ROW_1_2_3_4_5, 0, pressed);
+                }
+            }
+            case DIGIT2 -> {
+                if (joystick.getType() == Joystick.JoystickType.SINCLAIR_2) {
+                    joystick.setRight(pressed);
+                } else {
+                    keyboard.setKeyPressed(Keyboard.ROW_1_2_3_4_5, 1, pressed);
+                }
+            }
+            case DIGIT3 -> {
+                if (joystick.getType() == Joystick.JoystickType.SINCLAIR_2) {
+                    joystick.setDown(pressed);
+                } else {
+                    keyboard.setKeyPressed(Keyboard.ROW_1_2_3_4_5, 2, pressed);
+                }
+            }
+            case DIGIT4 -> {
+                if (joystick.getType() == Joystick.JoystickType.SINCLAIR_2) {
+                    joystick.setUp(pressed);
+                } else {
+                    keyboard.setKeyPressed(Keyboard.ROW_1_2_3_4_5, 3, pressed);
+                }
+            }
+            case DIGIT5 -> {
+                if (joystick.getType() == Joystick.JoystickType.SINCLAIR_2) {
+                    joystick.setFire(pressed);
+                } else if (joystick.getType() == Joystick.JoystickType.CURSOR) {
+                    joystick.setLeft(pressed);
+                } else {
+                    keyboard.setKeyPressed(Keyboard.ROW_1_2_3_4_5, 4, pressed);
+                }
+            }
 
             // Row 4: 0, 9, 8, 7, 6
-            case DIGIT0 -> keyboard.setKeyPressed(Keyboard.ROW_0_9_8_7_6, 0, pressed);
-            case DIGIT9 -> keyboard.setKeyPressed(Keyboard.ROW_0_9_8_7_6, 1, pressed);
-            case DIGIT8 -> keyboard.setKeyPressed(Keyboard.ROW_0_9_8_7_6, 2, pressed);
-            case DIGIT7 -> keyboard.setKeyPressed(Keyboard.ROW_0_9_8_7_6, 3, pressed);
-            case DIGIT6 -> keyboard.setKeyPressed(Keyboard.ROW_0_9_8_7_6, 4, pressed);
+            case DIGIT0 -> {
+                if (joystick.getType() == Joystick.JoystickType.SINCLAIR_1 || joystick.getType() == Joystick.JoystickType.CURSOR) {
+                    joystick.setFire(pressed);
+                } else {
+                    keyboard.setKeyPressed(Keyboard.ROW_0_9_8_7_6, 0, pressed);
+                }
+            }
+            case DIGIT9 -> {
+                if (joystick.getType() == Joystick.JoystickType.SINCLAIR_1) {
+                    joystick.setUp(pressed);
+                } else {
+                    keyboard.setKeyPressed(Keyboard.ROW_0_9_8_7_6, 1, pressed);
+                }
+            }
+            case DIGIT8 -> {
+                if (joystick.getType() == Joystick.JoystickType.SINCLAIR_1) {
+                    joystick.setDown(pressed);
+                } else if (joystick.getType() == Joystick.JoystickType.CURSOR) {
+                    joystick.setRight(pressed);
+                } else {
+                    keyboard.setKeyPressed(Keyboard.ROW_0_9_8_7_6, 2, pressed);
+                }
+            }
+            case DIGIT7 -> {
+                if (joystick.getType() == Joystick.JoystickType.SINCLAIR_1) {
+                    joystick.setRight(pressed);
+                } else if (joystick.getType() == Joystick.JoystickType.CURSOR) {
+                    joystick.setUp(pressed);
+                } else {
+                    keyboard.setKeyPressed(Keyboard.ROW_0_9_8_7_6, 3, pressed);
+                }
+            }
+            case DIGIT6 -> {
+                if (joystick.getType() == Joystick.JoystickType.SINCLAIR_1) {
+                    joystick.setLeft(pressed);
+                } else if (joystick.getType() == Joystick.JoystickType.CURSOR) {
+                    joystick.setDown(pressed);
+                } else {
+                    keyboard.setKeyPressed(Keyboard.ROW_0_9_8_7_6, 4, pressed);
+                }
+            }
 
             // Row 5: P, O, I, U, Y
             case P -> keyboard.setKeyPressed(Keyboard.ROW_P_O_I_U_Y, 0, pressed);

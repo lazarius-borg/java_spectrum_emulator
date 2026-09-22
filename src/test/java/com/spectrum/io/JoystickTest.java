@@ -230,4 +230,65 @@ public class JoystickTest {
         mapper.handleKeyPressed(KeyCode.W);
         assertThat(joystick.isUp()).isFalse();
     }
+
+    @Test
+    void testNativeInterfaceKeysDriveJoystick() {
+        KeyboardMapper mapper = new KeyboardMapper(keyboard, joystick);
+
+        // 1. Sinclair 2: Keys 1, 2, 3, 4, 5
+        joystick.setType(Joystick.JoystickType.SINCLAIR_2);
+        mapper.handleKeyPressed(KeyCode.DIGIT1);
+        assertThat(joystick.isLeft()).isTrue();
+        assertThat(keyboard.isKeyPressed(Keyboard.ROW_1_2_3_4_5, 0)).isTrue();
+
+        mapper.handleKeyPressed(KeyCode.DIGIT5);
+        assertThat(joystick.isFire()).isTrue();
+        assertThat(keyboard.isKeyPressed(Keyboard.ROW_1_2_3_4_5, 4)).isTrue();
+
+        mapper.handleKeyReleased(KeyCode.DIGIT1);
+        assertThat(joystick.isLeft()).isFalse();
+        assertThat(keyboard.isKeyPressed(Keyboard.ROW_1_2_3_4_5, 0)).isFalse();
+
+        mapper.handleKeyReleased(KeyCode.DIGIT5);
+        assertThat(joystick.isFire()).isFalse();
+
+        // 2. Sinclair 1: Keys 6, 7, 8, 9, 0
+        joystick.setType(Joystick.JoystickType.SINCLAIR_1);
+        mapper.handleKeyPressed(KeyCode.DIGIT6);
+        assertThat(joystick.isLeft()).isTrue();
+        assertThat(keyboard.isKeyPressed(Keyboard.ROW_0_9_8_7_6, 4)).isTrue();
+
+        mapper.handleKeyPressed(KeyCode.DIGIT0);
+        assertThat(joystick.isFire()).isTrue();
+        assertThat(keyboard.isKeyPressed(Keyboard.ROW_0_9_8_7_6, 0)).isTrue();
+
+        mapper.handleKeyReleased(KeyCode.DIGIT6);
+        mapper.handleKeyReleased(KeyCode.DIGIT0);
+        assertThat(joystick.isLeft()).isFalse();
+        assertThat(joystick.isFire()).isFalse();
+
+        // 3. Kempston: Keys 1-5 do NOT drive joystick, they act as normal typing keys
+        joystick.setType(Joystick.JoystickType.KEMPSTON);
+        mapper.handleKeyPressed(KeyCode.DIGIT1);
+        assertThat(joystick.isLeft()).isFalse(); // Joystick remains untouched
+        assertThat(keyboard.isKeyPressed(Keyboard.ROW_1_2_3_4_5, 0)).isTrue(); // Keyboard matrix key is set
+        mapper.handleKeyReleased(KeyCode.DIGIT1);
+        assertThat(keyboard.isKeyPressed(Keyboard.ROW_1_2_3_4_5, 0)).isFalse();
+    }
+
+    @Test
+    void testIsJoystickKey() {
+        KeyboardMapper mapper = new KeyboardMapper(keyboard, joystick);
+        mapper.setProfile(KeyboardMapper.HostJoystickProfile.ARROWS_SPACE_CTRL);
+
+        assertThat(mapper.isJoystickKey(KeyCode.LEFT)).isTrue();
+        assertThat(mapper.isJoystickKey(KeyCode.SPACE)).isTrue();
+        assertThat(mapper.isJoystickKey(KeyCode.CONTROL)).isTrue();
+        assertThat(mapper.isJoystickKey(KeyCode.A)).isFalse();
+
+        joystick.setType(Joystick.JoystickType.SINCLAIR_2);
+        assertThat(mapper.isJoystickKey(KeyCode.DIGIT1)).isTrue();
+        assertThat(mapper.isJoystickKey(KeyCode.DIGIT5)).isTrue();
+        assertThat(mapper.isJoystickKey(KeyCode.DIGIT9)).isFalse();
+    }
 }

@@ -94,48 +94,64 @@ public final class SpectrumApp extends Application {
         startLoop();
     }
 
+    private RadioMenuItem kempstonItem;
+    private RadioMenuItem sinclair1Item;
+    private RadioMenuItem sinclair2Item;
+    private RadioMenuItem cursorItem;
+    private final java.util.Map<KeyboardMapper.HostJoystickProfile, RadioMenuItem> profileMenuItems = new java.util.EnumMap<>(KeyboardMapper.HostJoystickProfile.class);
+
+    public void syncInputMenuState() {
+        if (kempstonItem == null) return;
+        switch (machine.getJoystick().getType()) {
+            case KEMPSTON -> kempstonItem.setSelected(true);
+            case SINCLAIR_1 -> sinclair1Item.setSelected(true);
+            case SINCLAIR_2 -> sinclair2Item.setSelected(true);
+            case CURSOR -> cursorItem.setSelected(true);
+        }
+        RadioMenuItem profItem = profileMenuItems.get(keyboardMapper.getProfile());
+        if (profItem != null) profItem.setSelected(true);
+        if (onScreenJoystickView != null) {
+            onScreenJoystickView.updateInfo("Mode: " + machine.getJoystick().getType().name());
+        }
+    }
+
     private MenuBar createMenuBar(Stage stage) {
         MenuBar bar = new MenuBar();
 
         // File Menu
         Menu fileMenu = new Menu("File");
-        MenuItem openSnapshot = new MenuItem("Open Snapshot (.SNA, .Z80)...");
-        openSnapshot.setOnAction(e -> handleOpenSnapshot(stage));
-
-        MenuItem saveSnapshot = new MenuItem("Save Snapshot (.SNA)...");
-        saveSnapshot.setOnAction(e -> handleSaveSnapshot(stage));
-
         MenuItem openTape = new MenuItem("Insert Tape (.TAP)...");
-        openTape.setOnAction(e -> handleOpenTape(stage));
-
-        MenuItem loadRom = new MenuItem("Load ROM File...");
-        loadRom.setOnAction(e -> handleLoadRom(stage));
-
-        MenuItem exitItem = new MenuItem("Exit");
-        exitItem.setOnAction(e -> {
+        openTape.setOnAction(e -> chooseAndLoadTape(stage));
+        MenuItem saveSnapshot = new MenuItem("Save Snapshot (.SNA)...");
+        saveSnapshot.setOnAction(e -> saveSnapshot(stage));
+        MenuItem exit = new MenuItem("Exit");
+        exit.setOnAction(e -> {
+            if (loop != null) loop.stop();
+            machine.getAudioMixer().close();
             stage.close();
-            Platform.exit();
         });
-
-        fileMenu.getItems().addAll(openSnapshot, saveSnapshot, new SeparatorMenuItem(), openTape, loadRom, new SeparatorMenuItem(), exitItem);
+        fileMenu.getItems().addAll(openTape, saveSnapshot, new SeparatorMenuItem(), exit);
 
         // Machine Menu
         Menu machineMenu = new Menu("Machine");
-        RadioMenuItem m128k = new RadioMenuItem("ZX Spectrum 128K");
-        RadioMenuItem m48k = new RadioMenuItem("ZX Spectrum 48K");
         ToggleGroup modelGroup = new ToggleGroup();
+        RadioMenuItem m128k = new RadioMenuItem("ZX Spectrum 128K");
         m128k.setToggleGroup(modelGroup);
-        m48k.setToggleGroup(modelGroup);
         m128k.setSelected(true);
+        m128k.setOnAction(e -> machine.reset(MachineModel.SPECTRUM_128K));
 
-        m128k.setOnAction(e -> machine.setModel(MachineModel.SPECTRUM_128K));
-        m48k.setOnAction(e -> machine.setModel(MachineModel.SPECTRUM_48K));
+        RadioMenuItem m48k = new RadioMenuItem("ZX Spectrum 48K");
+        m48k.setToggleGroup(modelGroup);
+        m48k.setOnAction(e -> machine.reset(MachineModel.SPECTRUM_48K));
 
-        MenuItem resetItem = new MenuItem("Reset");
-        resetItem.setOnAction(e -> machine.reset());
+        MenuItem resetItem = new MenuItem("Hard Reset");
+        resetItem.setOnAction(e -> machine.reset(machine.getModel()));
 
         CheckMenuItem pauseItem = new CheckMenuItem("Pause");
-        pauseItem.setOnAction(e -> machine.setPaused(pauseItem.isSelected()));
+        pauseItem.setOnAction(e -> {
+            if (pauseItem.isSelected()) loop.stop();
+            else loop.start();
+        });
 
         CheckMenuItem fastForwardItem = new CheckMenuItem("Fast Forward (Turbo)");
         fastForwardItem.setOnAction(e -> machine.setFastForward(fastForwardItem.isSelected()));
@@ -145,31 +161,31 @@ public final class SpectrumApp extends Application {
         // Input Menu
         Menu inputMenu = new Menu("Input");
         ToggleGroup joyGroup = new ToggleGroup();
-        RadioMenuItem kempston = new RadioMenuItem("Kempston Joystick (Port 0x1F)");
-        RadioMenuItem sinclair1 = new RadioMenuItem("Sinclair 1 (6, 7, 8, 9, 0)");
-        RadioMenuItem sinclair2 = new RadioMenuItem("Sinclair 2 (1, 2, 3, 4, 5)");
-        RadioMenuItem cursor = new RadioMenuItem("Cursor / Protek (5, 6, 7, 8, 0)");
-        kempston.setToggleGroup(joyGroup);
-        sinclair1.setToggleGroup(joyGroup);
-        sinclair2.setToggleGroup(joyGroup);
-        cursor.setToggleGroup(joyGroup);
-        kempston.setSelected(true);
+        kempstonItem = new RadioMenuItem("Kempston Joystick (Port 0x1F)");
+        sinclair1Item = new RadioMenuItem("Sinclair 1 (6, 7, 8, 9, 0)");
+        sinclair2Item = new RadioMenuItem("Sinclair 2 (1, 2, 3, 4, 5)");
+        cursorItem = new RadioMenuItem("Cursor / Protek (5, 6, 7, 8, 0)");
+        kempstonItem.setToggleGroup(joyGroup);
+        sinclair1Item.setToggleGroup(joyGroup);
+        sinclair2Item.setToggleGroup(joyGroup);
+        cursorItem.setToggleGroup(joyGroup);
+        kempstonItem.setSelected(true);
 
-        kempston.setOnAction(e -> {
+        kempstonItem.setOnAction(e -> {
             machine.getJoystick().setType(Joystick.JoystickType.KEMPSTON);
-            onScreenJoystickView.updateInfo("Mode: KEMPSTON");
+            syncInputMenuState();
         });
-        sinclair1.setOnAction(e -> {
+        sinclair1Item.setOnAction(e -> {
             machine.getJoystick().setType(Joystick.JoystickType.SINCLAIR_1);
-            onScreenJoystickView.updateInfo("Mode: SINCLAIR 1");
+            syncInputMenuState();
         });
-        sinclair2.setOnAction(e -> {
+        sinclair2Item.setOnAction(e -> {
             machine.getJoystick().setType(Joystick.JoystickType.SINCLAIR_2);
-            onScreenJoystickView.updateInfo("Mode: SINCLAIR 2");
+            syncInputMenuState();
         });
-        cursor.setOnAction(e -> {
+        cursorItem.setOnAction(e -> {
             machine.getJoystick().setType(Joystick.JoystickType.CURSOR);
-            onScreenJoystickView.updateInfo("Mode: CURSOR");
+            syncInputMenuState();
         });
 
         // Host Keyboard Profile Submenu
@@ -179,14 +195,21 @@ public final class SpectrumApp extends Application {
             RadioMenuItem item = new RadioMenuItem(prof.getDisplayName());
             item.setToggleGroup(profGroup);
             if (prof == keyboardMapper.getProfile()) item.setSelected(true);
-            item.setOnAction(ev -> keyboardMapper.setProfile(prof));
+            item.setOnAction(ev -> {
+                keyboardMapper.setProfile(prof);
+                syncInputMenuState();
+            });
+            profileMenuItems.put(prof, item);
             profileMenu.getItems().add(item);
         }
 
         MenuItem joySettings = new MenuItem("Joystick Settings & Tester...");
-        joySettings.setOnAction(e -> new JoystickSettingsDialog(stage, machine.getJoystick(), keyboardMapper, onScreenJoystickView).showAndWait());
+        joySettings.setOnAction(e -> {
+            new JoystickSettingsDialog(stage, machine.getJoystick(), machine.getKeyboard(), keyboardMapper, onScreenJoystickView, this::syncInputMenuState).showAndWait();
+            syncInputMenuState();
+        });
 
-        inputMenu.getItems().addAll(kempston, sinclair1, sinclair2, cursor, new SeparatorMenuItem(), profileMenu, new SeparatorMenuItem(), joySettings);
+        inputMenu.getItems().addAll(kempstonItem, sinclair1Item, sinclair2Item, cursorItem, new SeparatorMenuItem(), profileMenu, new SeparatorMenuItem(), joySettings);
 
         // Audio Menu
         Menu audioMenu = new Menu("Audio");
@@ -428,32 +451,35 @@ public final class SpectrumApp extends Application {
 
             JOYSTICK SIMULATION REFERENCE
             -----------------------------
-            • Kempston Joystick (Port 0x1F):
-                Supported by 95%+ of ZX Spectrum games. Does not interfere
-                with typing or number keys.
-            • Sinclair 1 Joystick (Port 0xFE):
-                Keys 6, 7, 8, 9 (Left, Right, Right/Down, Up) and 0 (Fire).
-            • Sinclair 2 Joystick (Port 0xFE):
-                Keys 1, 2, 3, 4 (Left, Right, Down, Up) and 5 (Fire).
-            • Cursor / Protek Joystick (Port 0xFE):
-                Keys 5, 6, 7, 8 (Left, Down, Up, Right) and 0 (Fire).
+            • How Joystick Simulation Works:
+              There are two separate concepts working in harmony:
+              1. Spectrum Joystick Interface (What the emulated game reads):
+                 - Kempston (Port 0x1F): Dedicated port; zero typing conflicts;
+                   supported by 95%+ of games (RECOMMENDED).
+                 - Sinclair 1: Simulates Interface 2 Port 1 (keys 6, 7, 8, 9, 0).
+                 - Sinclair 2: Simulates Interface 2 Port 2 (keys 1, 2, 3, 4, 5).
+                 - Cursor / Protek: Simulates Cursor joystick (keys 5, 8, 6, 7, 0).
 
-            • Host Keyboard Joystick Profiles (Configurable in Input -> Joystick Settings):
-                1. Arrows + Space / L-Ctrl (Default)
-                2. WASD + Space / J (Great for left-handed steering)
-                3. Numpad 8, 4, 6, 2 + Numpad 0 / Enter
-                4. Disabled (Keyboard strictly types)
+              2. Host Controller Input (How YOU steer on your PC):
+                 - Host Keyboard Profile (Arrows, WASD, Numpad, or Native Keys).
+                 - Virtual Arcade Stick (mouse/trackpad drag & Fire button).
+                 - In Sinclair 1/2 or Cursor mode, the native number keys (1-5 or
+                   6-0) ALSO steer the joystick directly on your PC!
 
-            • Virtual On-Screen Joystick:
-                Click 'Joystick' in toolbar or View menu. Click and drag the
-                stick with mouse or trackpad for 8-way steering, and click
-                the red arcade FIRE button.
+            • Playing Games:
+              1. In the emulator's 'Input' menu, select the interface matching what
+                 you choose in the game's menu (e.g. Kempston or Sinclair 2).
+              2. Steer using your host Arrow keys, WASD, or the on-screen stick!
+
+            • Live Joystick Settings & Tester:
+              Open 'Input -> Joystick Settings & Tester...' to configure profiles
+              and verify directional and button inputs in real time.
             """;
 
         TextArea area = new TextArea(helpText);
         area.setEditable(false);
         area.setWrapText(true);
-        area.setPrefSize(520, 420);
+        area.setPrefSize(540, 440);
         area.setStyle("-fx-font-family: monospace; -fx-font-size: 12px;");
 
         alert.getDialogPane().setContent(area);
