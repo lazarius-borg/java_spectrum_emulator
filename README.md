@@ -42,7 +42,7 @@ java_spectrum_emulator/
 ├── pom.xml
 ├── roms/                              # Directory for 128K/48K ROM files
 ├── src/
-│   ├── main/java/com/spectrum/
+│   ├── main/java/nl/invokedynamic/spectrum/
 │   │   ├── cpu/
 │   │   │   ├── Z80Cpu.java            # CPU core coordinator
 │   │   │   ├── CpuState.java          # Registers and interrupt state
@@ -78,7 +78,7 @@ java_spectrum_emulator/
 │   │       ├── SpectrumApp.java       # JavaFX Application GUI
 │   │       ├── ScreenView.java        # Canvas with pixel-perfect scaling
 │   │       └── KeyboardMapper.java    # Host key event translator
-│   └── test/java/com/spectrum/        # Automated JUnit 5 test suite
+│   └── test/java/nl/invokedynamic/spectrum/        # Automated JUnit 5 test suite
 ```
 
 ---

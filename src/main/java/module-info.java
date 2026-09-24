@@ -1,4 +1,4 @@
-module com.spectrum.emulator {
+module nl.invokedynamic.spectrum.emulator {
     // Platform modules
     requires java.desktop;
 
@@ -9,16 +9,16 @@ module com.spectrum.emulator {
     requires javafx.base;
 
     // Exported domain packages
-    exports com.spectrum.cpu;
-    exports com.spectrum.io;
-    exports com.spectrum.machine;
-    exports com.spectrum.memory;
-    exports com.spectrum.sound;
-    exports com.spectrum.storage;
-    exports com.spectrum.ui;
-    exports com.spectrum.ula;
+    exports nl.invokedynamic.spectrum.cpu;
+    exports nl.invokedynamic.spectrum.io;
+    exports nl.invokedynamic.spectrum.machine;
+    exports nl.invokedynamic.spectrum.memory;
+    exports nl.invokedynamic.spectrum.sound;
+    exports nl.invokedynamic.spectrum.storage;
+    exports nl.invokedynamic.spectrum.ui;
+    exports nl.invokedynamic.spectrum.ula;
 
     // Open packages for reflection & dependency injection
-    opens com.spectrum.ui to javafx.fxml, javafx.graphics;
-    opens com.spectrum.storage to javafx.base;
+    opens nl.invokedynamic.spectrum.ui to javafx.fxml, javafx.graphics;
+    opens nl.invokedynamic.spectrum.storage to javafx.base;
 }
