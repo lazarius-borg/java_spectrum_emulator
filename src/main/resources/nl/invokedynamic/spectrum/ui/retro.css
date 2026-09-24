@@ -1,0 +1,346 @@
+/* ==========================================================================
+   ZX Spectrum 128K Emulator - Retro Lazygit TUI Theme
+   ========================================================================== */
+
+.root {
+    -fx-base: #18181c;
+    -fx-background: #111114;
+    -fx-background-color: #111114;
+    -fx-font-family: Menlo, Monaco, "DejaVu Sans Mono", "Courier New", Consolas, monospace;
+    -fx-font-size: 11px;
+    -fx-text-fill: #e8e8ed;
+}
+
+/* ==========================================================================
+   Menu Bar & Menus
+   ========================================================================== */
+.menu-bar {
+    -fx-background-color: #18181e;
+    -fx-border-color: #2e2e38;
+    -fx-border-width: 0 0 1 0;
+    -fx-padding: 1 4 1 4;
+}
+
+.menu-bar .menu-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: #cccccc;
+    -fx-font-family: monospace;
+    -fx-font-size: 11px;
+}
+
+.menu-bar .menu-button:hover,
+.menu-bar .menu-button:showing {
+    -fx-background-color: #282834;
+    -fx-text-fill: #00e5ff;
+}
+
+.context-menu {
+    -fx-background-color: #1a1a22;
+    -fx-border-color: #3e3e4e;
+    -fx-border-width: 1;
+    -fx-padding: 4;
+}
+
+.menu-item {
+    -fx-background-color: transparent;
+    -fx-padding: 4 10 4 10;
+}
+
+.menu-item .label {
+    -fx-text-fill: #dcdce2;
+    -fx-font-family: monospace;
+    -fx-font-size: 11px;
+}
+
+.menu-item:hover,
+.menu-item:focused {
+    -fx-background-color: #2b3544;
+}
+
+.menu-item:hover .label,
+.menu-item:focused .label {
+    -fx-text-fill: #50fa7b;
+}
+
+.separator-menu-item .line {
+    -fx-border-color: #32323e;
+    -fx-border-width: 1 0 0 0;
+}
+
+/* ==========================================================================
+   Retro Framed Panels (Lazygit Style)
+   ========================================================================== */
+.retro-panel {
+    -fx-background-color: #16161a;
+    -fx-border-color: #383844;
+    -fx-border-width: 1;
+    -fx-border-radius: 4;
+    -fx-background-radius: 4;
+    -fx-padding: 4;
+}
+
+.retro-panel:hover {
+    -fx-border-color: #4c4c5c;
+}
+
+.retro-panel-header {
+    -fx-background-color: #1c1c22;
+    -fx-border-color: #333340;
+    -fx-border-width: 0 0 1 0;
+    -fx-padding: 3 8 3 8;
+    -fx-alignment: CENTER_LEFT;
+}
+
+.panel-title-library {
+    -fx-text-fill: #00e5ff;
+    -fx-font-weight: bold;
+    -fx-font-family: monospace;
+    -fx-font-size: 11px;
+}
+
+.panel-title-screen {
+    -fx-text-fill: #50fa7b;
+    -fx-font-weight: bold;
+    -fx-font-family: monospace;
+    -fx-font-size: 11px;
+}
+
+.panel-title-keyboard {
+    -fx-text-fill: #ffd700;
+    -fx-font-weight: bold;
+    -fx-font-family: monospace;
+    -fx-font-size: 11px;
+}
+
+.panel-title-joystick {
+    -fx-text-fill: #ff79c6;
+    -fx-font-weight: bold;
+    -fx-font-family: monospace;
+    -fx-font-size: 11px;
+}
+
+.panel-title-inspector {
+    -fx-text-fill: #bd93f9;
+    -fx-font-weight: bold;
+    -fx-font-family: monospace;
+    -fx-font-size: 11px;
+}
+
+.inspector-tab-bar {
+    -fx-background-color: #1a1a24;
+    -fx-border-color: #383848;
+    -fx-border-width: 0 0 1 0;
+    -fx-padding: 2 4 4 4;
+}
+
+.inspector-subtab {
+    -fx-font-family: monospace;
+    -fx-font-size: 11px;
+    -fx-text-fill: #8b8ba0;
+    -fx-alignment: center;
+    -fx-padding: 3 6 3 6;
+    -fx-background-color: #22222e;
+    -fx-border-color: #383848;
+    -fx-border-width: 1;
+    -fx-border-radius: 3;
+    -fx-background-radius: 3;
+    -fx-cursor: hand;
+}
+
+.inspector-subtab:hover {
+    -fx-background-color: #2e2e3e;
+    -fx-text-fill: #50fa7b;
+    -fx-border-color: #50fa7b;
+}
+
+.inspector-subtab-active {
+    -fx-background-color: #2a2040;
+    -fx-text-fill: #50fa7b;
+    -fx-border-color: #bd93f9;
+    -fx-font-weight: bold;
+}
+
+/* ==========================================================================
+   Retro Buttons & Toggles
+   ========================================================================== */
+.retro-btn {
+    -fx-background-color: #24242c;
+    -fx-text-fill: #e0e0e8;
+    -fx-border-color: #424252;
+    -fx-border-width: 1;
+    -fx-border-radius: 3;
+    -fx-background-radius: 3;
+    -fx-font-family: monospace;
+    -fx-font-size: 10px;
+    -fx-padding: 3 8 3 8;
+    -fx-cursor: hand;
+}
+
+.retro-btn:hover {
+    -fx-background-color: #30303c;
+    -fx-border-color: #00e5ff;
+    -fx-text-fill: #ffffff;
+}
+
+.retro-btn:pressed {
+    -fx-background-color: #181820;
+}
+
+.retro-btn-play {
+    -fx-border-color: #2d5a3c;
+    -fx-text-fill: #50fa7b;
+}
+.retro-btn-play:hover {
+    -fx-background-color: #1e3826;
+    -fx-border-color: #50fa7b;
+    -fx-text-fill: #80ffaa;
+}
+
+.retro-btn-pause {
+    -fx-border-color: #665220;
+    -fx-text-fill: #ffd700;
+}
+.retro-btn-pause:hover {
+    -fx-background-color: #382e14;
+    -fx-border-color: #ffd700;
+    -fx-text-fill: #ffea70;
+}
+
+.retro-btn-stop {
+    -fx-border-color: #662b2b;
+    -fx-text-fill: #ff5555;
+}
+.retro-btn-stop:hover {
+    -fx-background-color: #381818;
+    -fx-border-color: #ff5555;
+    -fx-text-fill: #ff8888;
+}
+
+.retro-btn-rewind {
+    -fx-border-color: #2b5566;
+    -fx-text-fill: #8be9fd;
+}
+.retro-btn-rewind:hover {
+    -fx-background-color: #162f38;
+    -fx-border-color: #8be9fd;
+    -fx-text-fill: #bbf3ff;
+}
+
+.retro-toggle-btn {
+    -fx-background-color: #222228;
+    -fx-text-fill: #aaaaaf;
+    -fx-border-color: #3c3c4a;
+    -fx-border-width: 1;
+    -fx-border-radius: 3;
+    -fx-background-radius: 3;
+    -fx-font-family: monospace;
+    -fx-font-size: 10px;
+    -fx-padding: 3 8 3 8;
+    -fx-cursor: hand;
+}
+
+.retro-toggle-btn:hover {
+    -fx-background-color: #2c2c36;
+    -fx-text-fill: #ffffff;
+}
+
+.retro-toggle-btn:selected {
+    -fx-background-color: #1d333e;
+    -fx-border-color: #00e5ff;
+    -fx-text-fill: #00e5ff;
+}
+
+/* ==========================================================================
+   Tape Library List & Cells
+   ========================================================================== */
+.tape-list-view {
+    -fx-background-color: #121216;
+    -fx-border-color: #2c2c36;
+    -fx-border-width: 1;
+    -fx-border-radius: 2;
+    -fx-padding: 1;
+}
+
+.tape-list-view .list-cell {
+    -fx-background-color: #16161c;
+    -fx-border-color: #22222a;
+    -fx-border-width: 0 0 1 0;
+    -fx-padding: 4 6 4 6;
+    -fx-text-fill: #dcdce2;
+    -fx-cursor: hand;
+}
+
+.tape-list-view .list-cell:empty {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+}
+
+.tape-list-view .list-cell:filled:hover {
+    -fx-background-color: #22222e;
+}
+
+.tape-list-view .list-cell:filled:selected {
+    -fx-background-color: #183344;
+    -fx-border-color: #00e5ff;
+    -fx-border-width: 0 0 1 2;
+}
+
+.tape-entry-name {
+    -fx-font-family: monospace;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #50fa7b;
+}
+
+.tape-entry-meta {
+    -fx-font-family: monospace;
+    -fx-font-size: 9px;
+    -fx-text-fill: #ffb86c;
+}
+
+.tape-entry-path {
+    -fx-font-family: monospace;
+    -fx-font-size: 9px;
+    -fx-text-fill: #7c7c8c;
+}
+
+/* ==========================================================================
+   Status Bar & Badges
+   ========================================================================== */
+.retro-bottom-bar {
+    -fx-background-color: #15151a;
+    -fx-border-color: #2e2e3a;
+    -fx-border-width: 1 0 0 0;
+    -fx-padding: 4 10 4 10;
+}
+
+.badge-fps {
+    -fx-font-family: monospace;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #ffd700;
+}
+
+.badge-status {
+    -fx-font-family: monospace;
+    -fx-font-size: 10px;
+    -fx-text-fill: #8be9fd;
+}
+
+.badge-tape {
+    -fx-font-family: monospace;
+    -fx-font-size: 11px;
+    -fx-text-fill: #50fa7b;
+}
+
+/* Scrollbars */
+.scroll-bar {
+    -fx-background-color: #141418;
+}
+.scroll-bar .thumb {
+    -fx-background-color: #363644;
+    -fx-background-radius: 2;
+}
+.scroll-bar .thumb:hover {
+    -fx-background-color: #4a4a5c;
+}
