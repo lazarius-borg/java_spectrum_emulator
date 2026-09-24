@@ -102,7 +102,18 @@ public final class JoystickSettingsDialog extends Dialog<Void> {
             if (onSettingsChanged != null) onSettingsChanged.run();
         });
 
-        interfaceBox.getChildren().addAll(ifaceHeader, rbKempston, rbSinclair1, rbSinclair2, rbCursor);
+        if (joystick.isLockedByProgram()) {
+            Label lockBanner = new Label("🔒 Interface is currently locked by the loaded game (" + joystick.getLockReason() + ").\nReset the machine (Machine -> Reset) to change manually.");
+            lockBanner.setStyle("-fx-text-fill: #FFB86C; -fx-font-size: 10px; -fx-font-style: italic; -fx-padding: 2 0 4 0;");
+            lockBanner.setWrapText(true);
+            rbKempston.setDisable(true);
+            rbSinclair1.setDisable(true);
+            rbSinclair2.setDisable(true);
+            rbCursor.setDisable(true);
+            interfaceBox.getChildren().addAll(ifaceHeader, lockBanner, rbKempston, rbSinclair1, rbSinclair2, rbCursor);
+        } else {
+            interfaceBox.getChildren().addAll(ifaceHeader, rbKempston, rbSinclair1, rbSinclair2, rbCursor);
+        }
 
         // 2. Keyboard Mapping Profile Selection
         VBox profileBox = new VBox(6);
@@ -123,7 +134,21 @@ public final class JoystickSettingsDialog extends Dialog<Void> {
         chkArrowCursor.setStyle(rbStyle);
         chkArrowCursor.setOnAction(e -> keyboardMapper.setMapArrowsToCursorKeys(chkArrowCursor.isSelected()));
 
-        profileBox.getChildren().addAll(profHeader, profileCombo, chkArrowCursor);
+        HBox fireKeyBox = new HBox(8);
+        fireKeyBox.setAlignment(Pos.CENTER_LEFT);
+        Label fireKeyHeader = new Label("Touchpad Co-Op Fire Key:");
+        fireKeyHeader.setStyle("-fx-font-weight: bold; -fx-text-fill: #E0E0E8; -fx-font-size: 11px;");
+
+        ComboBox<KeyboardMapper.TouchpadFireKey> fireKeyCombo = new ComboBox<>();
+        fireKeyCombo.getItems().addAll(KeyboardMapper.TouchpadFireKey.values());
+        fireKeyCombo.setValue(keyboardMapper.getTouchpadFireKey());
+        fireKeyCombo.setOnAction(e -> keyboardMapper.setTouchpadFireKey(fireKeyCombo.getValue()));
+
+        Label fireKeyDesc = new Label("(Left-hand fire key while steering with touchpad)");
+        fireKeyDesc.setStyle("-fx-font-size: 10px; -fx-text-fill: #888899;");
+        fireKeyBox.getChildren().addAll(fireKeyHeader, fireKeyCombo, fireKeyDesc);
+
+        profileBox.getChildren().addAll(profHeader, profileCombo, chkArrowCursor, fireKeyBox);
 
         // 3. Live Interactive Input Tester
         VBox testerBox = new VBox(8);

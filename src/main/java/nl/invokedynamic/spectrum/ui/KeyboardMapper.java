@@ -36,7 +36,31 @@ public class KeyboardMapper {
         }
     }
 
+    public enum TouchpadFireKey {
+        SPACE("Spacebar (Default)"),
+        CONTROL("Left Control"),
+        ALT("Left Alt"),
+        Z("Z Key"),
+        DISABLED("Disabled");
+
+        private final String displayName;
+
+        TouchpadFireKey(String displayName) {
+            this.displayName = displayName;
+        }
+
+        public String getDisplayName() {
+            return displayName;
+        }
+
+        @Override
+        public String toString() {
+            return displayName;
+        }
+    }
+
     private HostJoystickProfile profile = HostJoystickProfile.ARROWS_SPACE_CTRL;
+    private TouchpadFireKey touchpadFireKey = TouchpadFireKey.SPACE;
     private boolean mapArrowsToCursorKeys = true;
 
     public KeyboardMapper(Keyboard keyboard, Joystick joystick) {
@@ -53,6 +77,14 @@ public class KeyboardMapper {
         joystick.reset();
     }
 
+    public TouchpadFireKey getTouchpadFireKey() {
+        return touchpadFireKey;
+    }
+
+    public void setTouchpadFireKey(TouchpadFireKey touchpadFireKey) {
+        this.touchpadFireKey = touchpadFireKey != null ? touchpadFireKey : TouchpadFireKey.SPACE;
+    }
+
     public boolean isMapArrowsToCursorKeys() {
         return mapArrowsToCursorKeys;
     }
@@ -62,6 +94,7 @@ public class KeyboardMapper {
     }
 
     public boolean isJoystickKey(KeyCode code) {
+        if (isTouchpadFireKey(code)) return true;
         if (profile == HostJoystickProfile.DISABLED) return false;
         if (profile == HostJoystickProfile.ARROWS_SPACE_CTRL) {
             if (code == KeyCode.UP || code == KeyCode.DOWN || code == KeyCode.LEFT ||
@@ -89,6 +122,17 @@ public class KeyboardMapper {
         return false;
     }
 
+    private boolean isTouchpadFireKey(KeyCode code) {
+        if (touchpadFireKey == TouchpadFireKey.DISABLED) return false;
+        return switch (touchpadFireKey) {
+            case SPACE -> (code == KeyCode.SPACE);
+            case CONTROL -> (code == KeyCode.CONTROL);
+            case ALT -> (code == KeyCode.ALT);
+            case Z -> (code == KeyCode.Z);
+            case DISABLED -> false;
+        };
+    }
+
     public void handleKeyPressed(KeyEvent event) {
         handleKey(event.getCode(), true);
     }
@@ -106,6 +150,12 @@ public class KeyboardMapper {
     }
 
     private void handleKey(KeyCode code, boolean pressed) {
+        // 0. Dedicated Touchpad Co-Op Fire Key (active whenever touchpadFireKey != DISABLED)
+        if (isTouchpadFireKey(code)) {
+            joystick.setFire(pressed);
+            return;
+        }
+
         // 1. Check Profile-specific Joystick mappings
         if (profile == HostJoystickProfile.WASD_SPACE_J) {
             switch (code) {
@@ -116,7 +166,9 @@ public class KeyboardMapper {
                 case J, K -> { joystick.setFire(pressed); return; }
                 case SPACE -> {
                     joystick.setFire(pressed);
-                    keyboard.setKeyPressed(Keyboard.ROW_SPACE_SS_M_N_B, 0, pressed);
+                    if (joystick.getType() != Joystick.JoystickType.KEMPSTON) {
+                        keyboard.setKeyPressed(Keyboard.ROW_SPACE_SS_M_N_B, 0, pressed);
+                    }
                     return;
                 }
                 default -> {}
@@ -173,14 +225,20 @@ public class KeyboardMapper {
                     return;
                 }
                 case CONTROL -> {
-                    if (steerWithArrows) joystick.setFire(pressed);
-                    keyboard.setKeyPressed(Keyboard.ROW_SPACE_SS_M_N_B, 1, pressed);
-                    return;
+                    if (steerWithArrows) {
+                        joystick.setFire(pressed);
+                        if (joystick.getType() != Joystick.JoystickType.KEMPSTON) {
+                            keyboard.setKeyPressed(Keyboard.ROW_SPACE_SS_M_N_B, 1, pressed);
+                        }
+                        return;
+                    }
                 }
                 case SPACE -> {
                     if (steerWithArrows) {
                         joystick.setFire(pressed);
-                        keyboard.setKeyPressed(Keyboard.ROW_SPACE_SS_M_N_B, 0, pressed);
+                        if (joystick.getType() != Joystick.JoystickType.KEMPSTON) {
+                            keyboard.setKeyPressed(Keyboard.ROW_SPACE_SS_M_N_B, 0, pressed);
+                        }
                         return;
                     }
                 }

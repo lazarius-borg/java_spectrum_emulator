@@ -49,7 +49,7 @@ public final class OnScreenJoystickView extends HBox {
         titleLabel.setStyle("-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #00E5FF;");
         infoLabel = new Label("Mode: " + joystick.getType());
         infoLabel.setStyle("-fx-font-size: 10px; -fx-text-fill: #AAAAAA;");
-        Label hintLabel = new Label("Drag stick or click FIRE");
+        Label hintLabel = new Label("Drag stick • [Space] or [Ctrl] to Fire");
         hintLabel.setStyle("-fx-font-size: 9px; -fx-text-fill: #777777;");
         infoBox.getChildren().addAll(titleLabel, infoLabel, hintLabel);
 

@@ -22,6 +22,11 @@ public final class SpectrumIoBus implements IoBus {
     private final Ay38912 psg;
     private final Spectrum128Memory memory;
     private TapePlayer tapePlayer;
+    private nl.invokedynamic.spectrum.cpu.Z80Cpu cpu;
+
+    private int kempstonHits = 0;
+    private int sinclair1Hits = 0;
+    private int sinclair2Hits = 0;
 
     public SpectrumIoBus(Keyboard keyboard, Joystick joystick, UlaDisplay ula,
                          Beeper beeper, Ay38912 psg, Spectrum128Memory memory) {
@@ -33,14 +38,30 @@ public final class SpectrumIoBus implements IoBus {
         this.memory = memory;
     }
 
+    public void setCpu(nl.invokedynamic.spectrum.cpu.Z80Cpu cpu) {
+        this.cpu = cpu;
+    }
+
     public void setTapePlayer(TapePlayer tapePlayer) {
         this.tapePlayer = tapePlayer;
+    }
+
+    public void resetPortDetection() {
+        kempstonHits = 0;
+        sinclair1Hits = 0;
+        sinclair2Hits = 0;
     }
 
     @Override
     public int in(int port) {
         // Kempston Joystick: Port 0x1F
         if ((port & 0xFF) == 0x1F) {
+            if (cpu != null && cpu.getState().getRegisters().getPC() >= 0x4000) {
+                kempstonHits++;
+                if (kempstonHits >= 3 && !joystick.isLockedByProgram()) {
+                    joystick.lockTo(Joystick.JoystickType.KEMPSTON, "Port 0x1F");
+                }
+            }
             return joystick.readKempston();
         }
 

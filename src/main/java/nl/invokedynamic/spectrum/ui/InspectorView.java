@@ -86,11 +86,11 @@ public final class InspectorView extends VBox {
         getStyleClass().add("retro-panel");
         setSpacing(6);
         setPadding(new Insets(4));
-        setPrefWidth(280);
-        setMinWidth(240);
-        setMaxWidth(380);
+        setPrefWidth(320);
+        setMinWidth(280);
+        setMaxWidth(420);
 
-        // 1. Panel Header & Lazygit-style Subtabs
+        // 1. Panel Header Row (Title + Model Badge)
         tabHeaderBox = new HBox(6);
         tabHeaderBox.setAlignment(Pos.CENTER_LEFT);
         tabHeaderBox.getStyleClass().add("retro-panel-header");
@@ -101,26 +101,30 @@ public final class InspectorView extends VBox {
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        HBox tabsHBox = new HBox(6);
-        tabsHBox.setAlignment(Pos.CENTER_RIGHT);
+        Label badgeLabel = new Label("[ 128K ]");
+        badgeLabel.setStyle("-fx-font-family: monospace; -fx-font-size: 10px; -fx-text-fill: #bd93f9;");
+        tabHeaderBox.getChildren().addAll(titleLabel, spacer, badgeLabel);
+
+        // 2. Segmented Full-Width Subtab Bar (Lazygit-style)
+        HBox tabBarBox = new HBox(4);
+        tabBarBox.setAlignment(Pos.CENTER);
+        tabBarBox.getStyleClass().add("inspector-tab-bar");
+
         InspectorTab[] tabs = InspectorTab.values();
         tabLabels = new Label[tabs.length];
         for (int i = 0; i < tabs.length; i++) {
             final InspectorTab tab = tabs[i];
             Label tabLbl = new Label(tab.getLabel());
             tabLbl.getStyleClass().add("inspector-subtab");
+            tabLbl.setMaxWidth(Double.MAX_VALUE);
+            tabLbl.setAlignment(Pos.CENTER);
+            HBox.setHgrow(tabLbl, Priority.ALWAYS);
             tabLbl.setOnMouseClicked(e -> selectTab(tab));
             tabLabels[i] = tabLbl;
-            tabsHBox.getChildren().add(tabLbl);
-            if (i < tabs.length - 1) {
-                Label sep = new Label("·");
-                sep.setStyle("-fx-text-fill: #555566;");
-                tabsHBox.getChildren().add(sep);
-            }
+            tabBarBox.getChildren().add(tabLbl);
         }
-        tabHeaderBox.getChildren().addAll(titleLabel, spacer, tabsHBox);
 
-        // 2. Build Subviews
+        // 3. Build Subviews
         cpuView = buildCpuView();
         memoryView = buildMemoryView();
         soundView = buildSoundView();
@@ -133,7 +137,7 @@ public final class InspectorView extends VBox {
         contentStack = new StackPane(cpuView, memoryView, soundView, allScrollPane);
         VBox.setVgrow(contentStack, Priority.ALWAYS);
 
-        getChildren().addAll(tabHeaderBox, contentStack);
+        getChildren().addAll(tabHeaderBox, tabBarBox, contentStack);
 
         selectTab(InspectorTab.CPU);
         updateState();
@@ -144,9 +148,10 @@ public final class InspectorView extends VBox {
         InspectorTab[] tabs = InspectorTab.values();
         for (int i = 0; i < tabs.length; i++) {
             boolean active = (tabs[i] == tab);
-            tabLabels[i].setStyle(active
-                ? "-fx-text-fill: #50fa7b; -fx-font-weight: bold; -fx-cursor: hand;"
-                : "-fx-text-fill: #7c7c8c; -fx-font-weight: normal; -fx-cursor: hand;");
+            tabLabels[i].getStyleClass().remove("inspector-subtab-active");
+            if (active) {
+                tabLabels[i].getStyleClass().add("inspector-subtab-active");
+            }
         }
 
         cpuView.setVisible(tab == InspectorTab.CPU);

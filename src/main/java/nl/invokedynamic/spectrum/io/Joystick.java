@@ -24,11 +24,52 @@ public final class Joystick {
     private boolean down = false;
     private boolean fire = false;
 
+    private boolean lockedByProgram = false;
+    private String lockReason = "";
+    private Runnable onLockChanged;
+
     public Joystick(Keyboard keyboard) {
         this.keyboard = keyboard;
     }
 
+    public void setOnLockChanged(Runnable onLockChanged) {
+        this.onLockChanged = onLockChanged;
+    }
+
+    public boolean isLockedByProgram() {
+        return lockedByProgram;
+    }
+
+    public String getLockReason() {
+        return lockReason;
+    }
+
+    public void lockTo(JoystickType newType, String reason) {
+        boolean changed = !lockedByProgram || this.type != newType;
+        this.lockedByProgram = true;
+        this.lockReason = reason;
+        if (this.type != newType) {
+            clearKeyboardKeys();
+            this.type = newType;
+            syncState();
+        }
+        if (changed && onLockChanged != null) {
+            onLockChanged.run();
+        }
+    }
+
+    public void unlock() {
+        if (lockedByProgram) {
+            lockedByProgram = false;
+            lockReason = "";
+            if (onLockChanged != null) {
+                onLockChanged.run();
+            }
+        }
+    }
+
     public void setType(JoystickType type) {
+        if (lockedByProgram) return; // Prevent manual alteration when locked by active program
         if (this.type != type) {
             clearKeyboardKeys();
             this.type = type;
@@ -48,6 +89,7 @@ public final class Joystick {
         fire = false;
         kempstonState = 0;
         clearKeyboardKeys();
+        unlock();
     }
 
     public void setLeft(boolean pressed) {

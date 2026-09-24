@@ -291,4 +291,114 @@ public class JoystickTest {
         assertThat(mapper.isJoystickKey(KeyCode.DIGIT5)).isTrue();
         assertThat(mapper.isJoystickKey(KeyCode.DIGIT9)).isFalse();
     }
+
+    @Test
+    void testJoystickLockingAndUnlocking() {
+        final boolean[] listenerFired = {false};
+        joystick.setOnLockChanged(() -> listenerFired[0] = true);
+
+        joystick.setType(Joystick.JoystickType.SINCLAIR_1);
+        assertThat(joystick.isLockedByProgram()).isFalse();
+        assertThat(joystick.getLockReason()).isEmpty();
+
+        // Lock to Kempston
+        joystick.lockTo(Joystick.JoystickType.KEMPSTON, "Port 0x1F");
+        assertThat(joystick.isLockedByProgram()).isTrue();
+        assertThat(joystick.getType()).isEqualTo(Joystick.JoystickType.KEMPSTON);
+        assertThat(joystick.getLockReason()).isEqualTo("Port 0x1F");
+        assertThat(listenerFired[0]).isTrue();
+
+        // Attempting to change type while locked should be ignored
+        joystick.setType(Joystick.JoystickType.SINCLAIR_2);
+        assertThat(joystick.getType()).isEqualTo(Joystick.JoystickType.KEMPSTON);
+
+        // Unlock
+        listenerFired[0] = false;
+        joystick.unlock();
+        assertThat(joystick.isLockedByProgram()).isFalse();
+        assertThat(joystick.getLockReason()).isEmpty();
+        assertThat(listenerFired[0]).isTrue();
+
+        // Now changing type should succeed
+        joystick.setType(Joystick.JoystickType.SINCLAIR_2);
+        assertThat(joystick.getType()).isEqualTo(Joystick.JoystickType.SINCLAIR_2);
+    }
+
+    @Test
+    void testIoBusKempstonAutoLockingAndReset() {
+        // Initially set to Sinclair 1
+        machine.getJoystick().setType(Joystick.JoystickType.SINCLAIR_1);
+        assertThat(machine.getJoystick().isLockedByProgram()).isFalse();
+
+        // When PC is in ROM (< 0x4000), reading port 0x1F does not trigger lock
+        machine.getCpu().getState().getRegisters().setPC(0x1000);
+        for (int i = 0; i < 5; i++) {
+            machine.getIoBus().in(0x1F);
+        }
+        assertThat(machine.getJoystick().isLockedByProgram()).isFalse();
+        assertThat(machine.getJoystick().getType()).isEqualTo(Joystick.JoystickType.SINCLAIR_1);
+
+        // When PC is in RAM (>= 0x4000), reading port 0x1F increments hit counter
+        machine.getCpu().getState().getRegisters().setPC(0x8000);
+        machine.getIoBus().in(0x1F); // hit 1
+        machine.getIoBus().in(0x1F); // hit 2
+        assertThat(machine.getJoystick().isLockedByProgram()).isFalse();
+
+        machine.getIoBus().in(0x1F); // hit 3: triggers lock
+        assertThat(machine.getJoystick().isLockedByProgram()).isTrue();
+        assertThat(machine.getJoystick().getType()).isEqualTo(Joystick.JoystickType.KEMPSTON);
+        assertThat(machine.getJoystick().getLockReason()).contains("0x1F");
+
+        // Machine reset should unlock joystick and reset port detection
+        machine.reset();
+        assertThat(machine.getJoystick().isLockedByProgram()).isFalse();
+        assertThat(machine.getJoystick().getLockReason()).isEmpty();
+    }
+
+    @Test
+    void testTouchpadCoOpFireKeyMapping() {
+        KeyboardMapper mapper = new KeyboardMapper(keyboard, joystick);
+        mapper.setProfile(KeyboardMapper.HostJoystickProfile.DISABLED);
+        joystick.setType(Joystick.JoystickType.KEMPSTON);
+
+        // Test with CONTROL
+        mapper.setTouchpadFireKey(KeyboardMapper.TouchpadFireKey.CONTROL);
+        assertThat(joystick.isFire()).isFalse();
+        mapper.handleKeyPressed(KeyCode.CONTROL);
+        assertThat(joystick.isFire()).isTrue();
+        // Since joystick is KEMPSTON, CONTROL should NOT leak Symbol Shift into keyboard matrix
+        assertThat(keyboard.isKeyPressed(Keyboard.ROW_SPACE_SS_M_N_B, 1)).isFalse();
+        mapper.handleKeyReleased(KeyCode.CONTROL);
+        assertThat(joystick.isFire()).isFalse();
+
+        // Test with SPACE
+        mapper.setTouchpadFireKey(KeyboardMapper.TouchpadFireKey.SPACE);
+        mapper.handleKeyPressed(KeyCode.SPACE);
+        assertThat(joystick.isFire()).isTrue();
+        // Since joystick is KEMPSTON, SPACE should NOT leak Space key into keyboard matrix
+        assertThat(keyboard.isKeyPressed(Keyboard.ROW_SPACE_SS_M_N_B, 0)).isFalse();
+        mapper.handleKeyReleased(KeyCode.SPACE);
+        assertThat(joystick.isFire()).isFalse();
+
+        // Test with ALT
+        mapper.setTouchpadFireKey(KeyboardMapper.TouchpadFireKey.ALT);
+        mapper.handleKeyPressed(KeyCode.ALT);
+        assertThat(joystick.isFire()).isTrue();
+        mapper.handleKeyReleased(KeyCode.ALT);
+        assertThat(joystick.isFire()).isFalse();
+
+        // Test with Z
+        mapper.setTouchpadFireKey(KeyboardMapper.TouchpadFireKey.Z);
+        mapper.handleKeyPressed(KeyCode.Z);
+        assertThat(joystick.isFire()).isTrue();
+        mapper.handleKeyReleased(KeyCode.Z);
+        assertThat(joystick.isFire()).isFalse();
+
+        // Test DISABLED
+        mapper.setTouchpadFireKey(KeyboardMapper.TouchpadFireKey.DISABLED);
+        mapper.handleKeyPressed(KeyCode.CONTROL);
+        mapper.handleKeyPressed(KeyCode.SPACE);
+        assertThat(joystick.isFire()).isFalse();
+    }
 }
+

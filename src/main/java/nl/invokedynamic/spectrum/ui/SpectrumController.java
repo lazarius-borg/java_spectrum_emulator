@@ -119,6 +119,7 @@ public final class SpectrumController {
         setupTapeListView();
 
         // Initial synchronization
+        machine.getJoystick().setOnLockChanged(() -> Platform.runLater(this::syncInputMenuState));
         syncInputMenuState();
     }
 
@@ -223,16 +224,43 @@ public final class SpectrumController {
 
     public void syncInputMenuState() {
         if (kempstonItem == null) return;
-        switch (machine.getJoystick().getType()) {
+        boolean locked = machine.getJoystick().isLockedByProgram();
+        Joystick.JoystickType type = machine.getJoystick().getType();
+
+        switch (type) {
             case KEMPSTON -> kempstonItem.setSelected(true);
             case SINCLAIR_1 -> sinclair1Item.setSelected(true);
             case SINCLAIR_2 -> sinclair2Item.setSelected(true);
             case CURSOR -> cursorItem.setSelected(true);
         }
+
+        if (locked) {
+            kempstonItem.setText("Kempston Joystick (Port 0x1F)" + (type == Joystick.JoystickType.KEMPSTON ? " 🔒 [In Use by Game]" : ""));
+            sinclair1Item.setText("Sinclair 1 (6, 7, 8, 9, 0)" + (type == Joystick.JoystickType.SINCLAIR_1 ? " 🔒 [In Use by Game]" : ""));
+            sinclair2Item.setText("Sinclair 2 (1, 2, 3, 4, 5)" + (type == Joystick.JoystickType.SINCLAIR_2 ? " 🔒 [In Use by Game]" : ""));
+            cursorItem.setText("Cursor / Protek (5, 6, 7, 8, 0)" + (type == Joystick.JoystickType.CURSOR ? " 🔒 [In Use by Game]" : ""));
+
+            kempstonItem.setDisable(true);
+            sinclair1Item.setDisable(true);
+            sinclair2Item.setDisable(true);
+            cursorItem.setDisable(true);
+        } else {
+            kempstonItem.setText("Kempston Joystick (Port 0x1F)");
+            sinclair1Item.setText("Sinclair 1 (6, 7, 8, 9, 0)");
+            sinclair2Item.setText("Sinclair 2 (1, 2, 3, 4, 5)");
+            cursorItem.setText("Cursor / Protek (5, 6, 7, 8, 0)");
+
+            kempstonItem.setDisable(false);
+            sinclair1Item.setDisable(false);
+            sinclair2Item.setDisable(false);
+            cursorItem.setDisable(false);
+        }
+
         RadioMenuItem profItem = profileMenuItems.get(keyboardMapper.getProfile());
         if (profItem != null) profItem.setSelected(true);
         if (onScreenJoystickView != null) {
-            onScreenJoystickView.updateInfo("Mode: " + machine.getJoystick().getType().name());
+            String lockSuffix = locked ? " 🔒 [In Use by Game]" : "";
+            onScreenJoystickView.updateInfo("Mode: " + type.name() + lockSuffix);
         }
     }
 
@@ -416,6 +444,7 @@ public final class SpectrumController {
     @FXML
     public void handleReset() {
         machine.reset();
+        syncInputMenuState();
     }
 
     @FXML

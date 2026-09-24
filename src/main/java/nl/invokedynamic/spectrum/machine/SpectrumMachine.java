@@ -48,6 +48,7 @@ public final class SpectrumMachine {
 
         this.ioBus = new SpectrumIoBus(keyboard, joystick, ula, beeper, psg, memory);
         this.ioBus.setTapePlayer(tapePlayer);
+        this.ioBus.setCpu(cpu);
 
         updateModelTiming();
         RomLoader.tryLoadDefaultRoms(memory);
@@ -76,6 +77,7 @@ public final class SpectrumMachine {
         psg.reset();
         keyboard.reset();
         joystick.reset();
+        ioBus.resetPortDetection();
         audioCycleAccumulator = 0;
     }
 
