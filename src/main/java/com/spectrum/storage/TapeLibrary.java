@@ -98,14 +98,17 @@ public final class TapeLibrary {
         Path localTaps = Path.of("taps");
         if (Files.isDirectory(localTaps)) {
             try (var stream = Files.list(localTaps)) {
-                stream.filter(p -> p.getFileName().toString().toLowerCase().endsWith(".tap"))
-                      .sorted()
-                      .forEach(p -> {
-                          try {
-                              List<TapFileFormat.TapBlock> blocks = TapFileFormat.load(p);
-                              addOrUpdate(p, blocks.size());
-                          } catch (Exception ignored) {}
-                      });
+                stream.filter(p -> {
+                    String name = p.getFileName().toString().toLowerCase();
+                    return name.endsWith(".tap") || name.endsWith(".tzx");
+                })
+                .sorted()
+                .forEach(p -> {
+                    try {
+                        List<TapFileFormat.TapBlock> blocks = TapeFormat.load(p);
+                        addOrUpdate(p, blocks.size());
+                    } catch (Exception ignored) {}
+                });
             } catch (IOException ignored) {}
         }
     }

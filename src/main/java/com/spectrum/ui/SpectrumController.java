@@ -5,6 +5,7 @@ import com.spectrum.machine.MachineModel;
 import com.spectrum.machine.SpectrumMachine;
 import com.spectrum.storage.SnaSnapshot;
 import com.spectrum.storage.TapFileFormat;
+import com.spectrum.storage.TapeFormat;
 import com.spectrum.storage.TapeLibrary;
 import com.spectrum.storage.TapeLibraryEntry;
 import com.spectrum.storage.Z80Snapshot;
@@ -242,12 +243,17 @@ public final class SpectrumController {
     @FXML
     public void handleAddTapeToLibrary() {
         FileChooser chooser = new FileChooser();
-        chooser.setTitle("Add Tape to Library (.TAP)");
-        chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("TAP Files (*.tap)", "*.tap"));
+        chooser.setTitle("Add Tape to Library (.TAP, .TZX)");
+        chooser.getExtensionFilters().addAll(
+            new FileChooser.ExtensionFilter("Tape Files (*.tap, *.tzx)", "*.tap", "*.tzx"),
+            new FileChooser.ExtensionFilter("TAP Files (*.tap)", "*.tap"),
+            new FileChooser.ExtensionFilter("TZX Files (*.tzx)", "*.tzx"),
+            new FileChooser.ExtensionFilter("All Files", "*.*")
+        );
         File file = chooser.showOpenDialog(stage);
         if (file != null) {
             try {
-                List<TapFileFormat.TapBlock> blocks = TapFileFormat.load(file.toPath());
+                List<TapFileFormat.TapBlock> blocks = TapeFormat.load(file.toPath());
                 TapeLibraryEntry entry = tapeLibrary.addOrUpdate(file.toPath(), blocks.size());
                 tapeListView.getSelectionModel().select(entry);
             } catch (Exception ex) {
@@ -282,7 +288,7 @@ public final class SpectrumController {
             return;
         }
         try {
-            List<TapFileFormat.TapBlock> blocks = TapFileFormat.load(path);
+            List<TapFileFormat.TapBlock> blocks = TapeFormat.load(path);
             machine.getTapePlayer().loadTape(blocks);
             currentTapeFileName = entry.name();
             tapeLibrary.addOrUpdate(path, blocks.size());
@@ -338,12 +344,17 @@ public final class SpectrumController {
     @FXML
     public void handleOpenTape() {
         FileChooser chooser = new FileChooser();
-        chooser.setTitle("Insert Tape (.TAP)");
-        chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("TAP Files (*.tap)", "*.tap"));
+        chooser.setTitle("Insert Tape (.TAP, .TZX)");
+        chooser.getExtensionFilters().addAll(
+            new FileChooser.ExtensionFilter("Tape Files (*.tap, *.tzx)", "*.tap", "*.tzx"),
+            new FileChooser.ExtensionFilter("TAP Files (*.tap)", "*.tap"),
+            new FileChooser.ExtensionFilter("TZX Files (*.tzx)", "*.tzx"),
+            new FileChooser.ExtensionFilter("All Files", "*.*")
+        );
         File file = chooser.showOpenDialog(stage);
         if (file != null) {
             try {
-                List<TapFileFormat.TapBlock> blocks = TapFileFormat.load(file.toPath());
+                List<TapFileFormat.TapBlock> blocks = TapeFormat.load(file.toPath());
                 machine.getTapePlayer().loadTape(blocks);
                 currentTapeFileName = file.getName();
                 tapeLabel.setText(String.format("Tape: %s (%d blks)", currentTapeFileName, blocks.size()));

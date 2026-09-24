@@ -17,7 +17,7 @@
                 <MenuItem text="Open Snapshot (.SNA, .Z80)..." onAction="#handleOpenSnapshot"/>
                 <MenuItem text="Save Snapshot (.SNA)..." onAction="#handleSaveSnapshot"/>
                 <SeparatorMenuItem/>
-                <MenuItem text="Insert Tape (.TAP)..." onAction="#handleOpenTape"/>
+                <MenuItem text="Insert Tape (.TAP, .TZX)..." onAction="#handleOpenTape"/>
                 <MenuItem text="Load ROM File..." onAction="#handleLoadRom"/>
                 <SeparatorMenuItem/>
                 <MenuItem text="Exit" onAction="#handleExit"/>
