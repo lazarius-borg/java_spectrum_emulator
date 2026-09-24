@@ -39,7 +39,11 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y fakeroot libasound2 libx11-6 libxext6 libxi6 libxrender1 libxtst6
+          if apt-cache show libasound2 >/dev/null 2>&1; then
+            sudo apt-get install -y fakeroot libasound2 libx11-6 libxext6 libxi6 libxrender1 libxtst6
+          else
+            sudo apt-get install -y fakeroot libasound2t64 libx11-6 libxext6 libxi6 libxrender1 libxtst6
+          fi
 
       - name: Run Tests
         run: ./mvnw test
@@ -52,11 +56,15 @@ jobs:
         run: |
           mkdir -p dist
           VERSION=$(echo "${{ github.ref_name }}" | sed -E 's/^v//' | grep -E -o '^[0-9]+(\.[0-9]+)*' || echo "1.0.0")
+          MAC_PACKAGE_VERSION="$VERSION"
+          if [[ "$MAC_PACKAGE_VERSION" == 0.* ]]; then
+            MAC_PACKAGE_VERSION="1.${MAC_PACKAGE_VERSION#0.}"
+          fi
           
           # Create DMG installer
           jpackage \
             --name "ZXSpectrum" \
-            --app-version "${VERSION}" \
+            --app-version "${MAC_PACKAGE_VERSION}" \
             --vendor "nl.invokedynamic" \
             --description "ZX Spectrum 128K Emulator" \
             --runtime-image target/zxspectrum-runtime \
