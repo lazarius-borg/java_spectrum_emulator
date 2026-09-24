@@ -48,45 +48,52 @@ EOF
 }
 
 # Parse command-line flags
-if [[ $# -gt 0 ]]; then
-    BUILD_ALL=false
-    while [[ $# -gt 0 ]]; do
-        case "$1" in
-            --all)
-                BUILD_ALL=true
-                shift
-                ;;
-            --dmg)
-                BUILD_DMG=true
-                shift
-                ;;
-            --app)
-                BUILD_APP=true
-                shift
-                ;;
-            --zip)
-                BUILD_ZIP=true
-                shift
-                ;;
-            --deb)
-                BUILD_DEB=true
-                shift
-                ;;
-            --no-test)
-                RUN_TESTS=false
-                shift
-                ;;
-            -h|--help)
-                print_usage
-                exit 0
-                ;;
-            *)
-                echo "Unknown option: $1"
-                print_usage
-                exit 1
-                ;;
-        esac
-    done
+SPECIFIC_TARGET=false
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --all)
+            BUILD_ALL=true
+            shift
+            ;;
+        --dmg)
+            BUILD_DMG=true
+            SPECIFIC_TARGET=true
+            shift
+            ;;
+        --app)
+            BUILD_APP=true
+            SPECIFIC_TARGET=true
+            shift
+            ;;
+        --zip)
+            BUILD_ZIP=true
+            SPECIFIC_TARGET=true
+            shift
+            ;;
+        --deb)
+            BUILD_DEB=true
+            SPECIFIC_TARGET=true
+            shift
+            ;;
+        --no-test)
+            RUN_TESTS=false
+            shift
+            ;;
+        -h|--help)
+            print_usage
+            exit 0
+            ;;
+        *)
+            echo "Unknown option: $1"
+            print_usage
+            exit 1
+            ;;
+    esac
+done
+
+if [ "${SPECIFIC_TARGET}" = false ]; then
+    BUILD_ALL=true
 fi
 
 OS_NAME="$(uname -s)"
