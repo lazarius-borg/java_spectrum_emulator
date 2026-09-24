@@ -61,6 +61,7 @@
                 <CheckMenuItem fx:id="showLibraryMenu" text="Show Tape Library" selected="true" onAction="#toggleLibraryFromMenu"/>
                 <CheckMenuItem fx:id="showKeyboardMenu" text="Show On-Screen Keyboard" selected="true" onAction="#toggleKeyboardFromMenu"/>
                 <CheckMenuItem fx:id="showJoystickMenu" text="Show On-Screen Joystick" selected="true" onAction="#toggleJoystickFromMenu"/>
+                <CheckMenuItem fx:id="showInspectorMenu" text="Show Inspector" selected="true" onAction="#toggleInspectorFromMenu"/>
             </Menu>
 
             <Menu text="Help">
@@ -78,10 +79,10 @@
                 <Insets top="6" right="6" bottom="6" left="6"/>
             </padding>
 
-            <!-- Main Display & Library Split Area -->
+            <!-- Main Display, Library & Inspector Split Area -->
             <HBox spacing="6" VBox.vgrow="ALWAYS">
                 <!-- Left: Tape Library Panel -->
-                <VBox fx:id="libraryPanel" styleClass="retro-panel" prefWidth="250" minWidth="200" maxWidth="320">
+                <VBox fx:id="libraryPanel" styleClass="retro-panel" prefWidth="240" minWidth="180" maxWidth="300">
                     <HBox styleClass="retro-panel-header" alignment="CENTER_LEFT">
                         <Label text="-[ 💾 Tape Library ]-" styleClass="panel-title-library"/>
                     </HBox>
@@ -96,13 +97,16 @@
                     <ListView fx:id="tapeListView" styleClass="tape-list-view" VBox.vgrow="ALWAYS"/>
                 </VBox>
 
-                <!-- Center/Right: ZX Spectrum Display Panel -->
+                <!-- Center: ZX Spectrum Display Panel -->
                 <VBox fx:id="screenPanel" styleClass="retro-panel" HBox.hgrow="ALWAYS" VBox.vgrow="ALWAYS">
                     <HBox styleClass="retro-panel-header" alignment="CENTER_LEFT">
                         <Label text="-[ 📺 ZX Spectrum Display ]-" styleClass="panel-title-screen"/>
                     </HBox>
                     <StackPane fx:id="screenContainer" VBox.vgrow="ALWAYS" alignment="CENTER" minHeight="240"/>
                 </VBox>
+
+                <!-- Right: Inspector Panel -->
+                <StackPane fx:id="inspectorContainer"/>
             </HBox>
 
             <!-- Bottom: Input Deck (Keyboard on Left, Joystick next to it on Right) -->
@@ -142,6 +146,7 @@
             <ToggleButton fx:id="btnToggleLibrary" text="☰ Library" onAction="#toggleLibraryFromButton" selected="true" styleClass="retro-toggle-btn"/>
             <ToggleButton fx:id="btnToggleKeyboard" text="⌨ Keyboard" onAction="#toggleKeyboardFromButton" selected="true" styleClass="retro-toggle-btn"/>
             <ToggleButton fx:id="btnToggleJoystick" text="🕹 Joystick" onAction="#toggleJoystickFromButton" selected="true" styleClass="retro-toggle-btn"/>
+            <ToggleButton fx:id="btnToggleInspector" text="⚙ Inspector" onAction="#toggleInspectorFromButton" selected="true" styleClass="retro-toggle-btn"/>
 
             <Separator orientation="VERTICAL"/>
 

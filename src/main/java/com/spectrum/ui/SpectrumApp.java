@@ -23,7 +23,7 @@ public final class SpectrumApp extends Application {
         this.controller = loader.getController();
         controller.setStage(stage);
 
-        Scene scene = new Scene(root, 1040, 820);
+        Scene scene = new Scene(root, 1260, 840);
 
         // Forward host keyboard events to the Spectrum keyboard and joystick mapper
         scene.setOnKeyPressed(controller.getKeyboardMapper()::handleKeyPressed);
@@ -31,7 +31,7 @@ public final class SpectrumApp extends Application {
 
         stage.setTitle("ZX Spectrum 128K Emulator");
         stage.setScene(scene);
-        stage.setMinWidth(780);
+        stage.setMinWidth(840);
         stage.setMinHeight(620);
         stage.setOnCloseRequest(e -> {
             controller.shutdown();

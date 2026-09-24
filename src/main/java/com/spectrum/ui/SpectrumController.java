@@ -48,6 +48,7 @@ public final class SpectrumController {
     @FXML private CheckMenuItem showLibraryMenu;
     @FXML private CheckMenuItem showKeyboardMenu;
     @FXML private CheckMenuItem showJoystickMenu;
+    @FXML private CheckMenuItem showInspectorMenu;
 
     @FXML private VBox libraryPanel;
     @FXML private VBox screenPanel;
@@ -58,6 +59,7 @@ public final class SpectrumController {
     @FXML private StackPane screenContainer;
     @FXML private StackPane keyboardContainer;
     @FXML private StackPane joystickContainer;
+    @FXML private StackPane inspectorContainer;
 
     @FXML private ListView<TapeLibraryEntry> tapeListView;
 
@@ -70,6 +72,7 @@ public final class SpectrumController {
     @FXML private ToggleButton btnToggleLibrary;
     @FXML private ToggleButton btnToggleKeyboard;
     @FXML private ToggleButton btnToggleJoystick;
+    @FXML private ToggleButton btnToggleInspector;
 
     @FXML private Label tapeLabel;
     @FXML private Label statusLabel;
@@ -80,6 +83,7 @@ public final class SpectrumController {
     private ScreenView screenView;
     private KeyboardView keyboardView;
     private OnScreenJoystickView onScreenJoystickView;
+    private InspectorView inspectorView;
     private TapeLibrary tapeLibrary;
     private Stage stage;
     private AnimationTimer loop;
@@ -98,12 +102,14 @@ public final class SpectrumController {
         this.screenView = new ScreenView();
         this.keyboardView = new KeyboardView(machine.getKeyboard());
         this.onScreenJoystickView = new OnScreenJoystickView(machine.getJoystick());
+        this.inspectorView = new InspectorView(machine);
         this.tapeLibrary = new TapeLibrary();
 
         // Attach custom views to containers
         screenContainer.getChildren().add(screenView);
         keyboardContainer.getChildren().add(keyboardView);
         joystickContainer.getChildren().add(onScreenJoystickView);
+        inspectorContainer.getChildren().add(inspectorView);
 
         // Host profiles menu setup
         setupProfileMenu();
@@ -404,6 +410,9 @@ public final class SpectrumController {
     @FXML
     public void handlePause() {
         machine.setPaused(pauseItem.isSelected());
+        if (inspectorView != null) {
+            inspectorView.updateState();
+        }
     }
 
     @FXML
@@ -535,6 +544,30 @@ public final class SpectrumController {
         showJoystickMenu.setSelected(show);
         btnToggleJoystick.setSelected(show);
         updateInputDeckVisibility();
+    }
+
+    @FXML
+    public void toggleInspectorFromMenu() {
+        boolean show = showInspectorMenu.isSelected();
+        setInspectorVisible(show);
+    }
+
+    @FXML
+    public void toggleInspectorFromButton() {
+        boolean show = btnToggleInspector.isSelected();
+        setInspectorVisible(show);
+    }
+
+    private void setInspectorVisible(boolean show) {
+        inspectorContainer.setVisible(show);
+        inspectorContainer.setManaged(show);
+        if (inspectorView != null) {
+            inspectorView.setVisible(show);
+            inspectorView.setManaged(show);
+            if (show) inspectorView.updateState();
+        }
+        showInspectorMenu.setSelected(show);
+        btnToggleInspector.setSelected(show);
     }
 
     private void updateInputDeckVisibility() {
@@ -717,6 +750,11 @@ public final class SpectrumController {
                 // Update on-screen joystick deflection
                 if (onScreenJoystickView != null && onScreenJoystickView.isVisible()) {
                     onScreenJoystickView.updateState();
+                }
+
+                // Update inspector panel internals
+                if (inspectorView != null && inspectorView.isVisible()) {
+                    inspectorView.updateState();
                 }
 
                 // FPS & Status metrics

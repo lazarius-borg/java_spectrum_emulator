@@ -125,6 +125,30 @@ public final class SpectrumMachine {
         }
     }
 
+    /**
+     * Executes a single CPU instruction when paused, updating video and peripherals.
+     */
+    public void stepSingleInstruction() {
+        if (tapePlayer.checkRomTrap(cpu.getState(), memory)) {
+            return;
+        }
+        int stepCycles = cpu.step(memory, ioBus);
+        psg.step(stepCycles);
+        tapePlayer.step(stepCycles);
+        beeper.setEarState(tapePlayer.getState() == TapePlayer.State.PLAYING && tapePlayer.getEarSignal());
+        ula.renderFrame(memory.getActiveScreenRam());
+    }
+
+    /**
+     * Advances by exactly one full frame when paused.
+     */
+    public void stepSingleFrame() {
+        boolean wasPaused = paused;
+        paused = false;
+        stepFrame();
+        paused = wasPaused;
+    }
+
     // --- Subsystem Accessors ---
     public Z80Cpu getCpu() { return cpu; }
     public Spectrum128Memory getMemory() { return memory; }

@@ -83,6 +83,42 @@ public final class Ay38912 {
         return registers;
     }
 
+    public int getChannelVolume(int ch) {
+        if (ch < 0 || ch > 2) return 0;
+        int val = registers[8 + ch];
+        if ((val & 0x10) != 0) {
+            return envStep;
+        }
+        return val & 0x0F;
+    }
+
+    public int getChannelPeriod(int ch) {
+        if (ch < 0 || ch > 2) return 0;
+        return (registers[ch * 2] & 0xFF) | ((registers[ch * 2 + 1] & 0x0F) << 8);
+    }
+
+    public boolean isToneEnabled(int ch) {
+        if (ch < 0 || ch > 2) return false;
+        return (registers[7] & (1 << ch)) == 0;
+    }
+
+    public boolean isNoiseEnabled(int ch) {
+        if (ch < 0 || ch > 2) return false;
+        return (registers[7] & (1 << (ch + 3))) == 0;
+    }
+
+    public int getNoisePeriod() {
+        return registers[6] & 0x1F;
+    }
+
+    public int getEnvelopePeriod() {
+        return (registers[11] & 0xFF) | ((registers[12] & 0xFF) << 8);
+    }
+
+    public int getEnvelopeShape() {
+        return registers[13] & 0x0F;
+    }
+
     /**
      * Advances the AY PSG by a number of CPU cycles and generates audio output for channels A, B, C.
      */

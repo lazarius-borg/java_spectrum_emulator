@@ -119,6 +119,24 @@
     -fx-font-size: 11px;
 }
 
+.panel-title-inspector {
+    -fx-text-fill: #bd93f9;
+    -fx-font-weight: bold;
+    -fx-font-family: monospace;
+    -fx-font-size: 11px;
+}
+
+.inspector-subtab {
+    -fx-font-family: monospace;
+    -fx-font-size: 10px;
+    -fx-cursor: hand;
+    -fx-padding: 1 4 1 4;
+}
+
+.inspector-subtab:hover {
+    -fx-text-fill: #50fa7b;
+}
+
 /* ==========================================================================
    Retro Buttons & Toggles
    ========================================================================== */

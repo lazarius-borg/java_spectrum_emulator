@@ -24,6 +24,10 @@ public final class Beeper {
              + (earState != 0 ? 0.55f : 0.0f);
     }
 
+    public int getSpeakerState() { return speakerState; }
+    public int getMicState() { return micState; }
+    public int getEarState() { return earState; }
+
     public void reset() {
         speakerState = 0;
         micState = 0;
