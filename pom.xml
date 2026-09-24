@@ -78,6 +78,7 @@
                     <mainClass>nl.invokedynamic.spectrum.emulator/nl.invokedynamic.spectrum.ui.SpectrumApp</mainClass>
                     <launcher>zxspectrum</launcher>
                     <jlinkImageName>zxspectrum-runtime</jlinkImageName>
+                    <jlinkZipName>zxspectrum-runtime</jlinkZipName>
                     <noHeaderFiles>true</noHeaderFiles>
                     <noManPages>true</noManPages>
                     <stripDebug>true</stripDebug>

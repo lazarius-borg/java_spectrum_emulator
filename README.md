@@ -4,6 +4,18 @@ A full software implementation of the **Sinclair ZX Spectrum 128K** written in *
 
 ---
 
+## 📦 Download & Install (No Java Required!)
+
+Pre-compiled, standalone native installers and portable bundles are available from the **[Releases](https://github.com/lazarius-borg/java_spectrum_emulator/releases)** page. These include a self-contained runtime so **no Java installation is required**.
+
+| Platform | Format | How to Run |
+| :--- | :--- | :--- |
+| **macOS** | **`ZXSpectrum.dmg`** (~33 MB) | Open `.dmg`, drag `ZXSpectrum` to `/Applications`, double-click to play! |
+| **Linux** | **`zxspectrum.deb`** (~35 MB) | Install via `sudo dpkg -i zxspectrum.deb` or extract `.tar.gz` and run `./bin/zxspectrum`. |
+| **Windows** | **`ZXSpectrum.msi`** (~38 MB) | Run installer setup wizard or extract `.zip` and double-click `bin\zxspectrum.bat`. |
+
+---
+
 ## Features
 
 - **Z80 CPU Core**:
@@ -114,6 +126,20 @@ mvn package
 ```bash
 mvn javafx:run
 ```
+
+### Build Streamlined Jlink Runtime
+Produces a trimmed, self-contained modular Java runtime in `target/zxspectrum-runtime/`:
+```bash
+mvn javafx:jlink
+./target/zxspectrum-runtime/bin/zxspectrum
+```
+
+### Build Native Installers & Bundles
+Produces native `.dmg` (macOS), `.deb` (Linux), and portable `.zip` bundles in `dist/`:
+```bash
+./scripts/package.sh --all
+```
+
 
 ---
 

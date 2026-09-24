@@ -31,4 +31,5 @@ target/
 # Local testing and external asset directories (embedded in resources for distribution)
 /taps/
 /roms/
-
+dist/
+*.dmg

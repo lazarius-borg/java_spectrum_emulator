@@ -1,0 +1,126 @@
+name: Release Installers
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-release:
+    name: Build Installer (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            artifact-pattern: 'dist/*.dmg,dist/*.zip'
+          - os: ubuntu-latest
+            artifact-pattern: 'dist/*.deb,dist/*.tar.gz'
+          - os: windows-latest
+            artifact-pattern: 'dist/*.msi,dist/*.zip'
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Java 26
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'oracle'
+          java-version: '26'
+          cache: 'maven'
+
+      - name: Install Linux Dependencies (Ubuntu)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y fakeroot libasound2 libx11-6 libxext6 libxi6 libxrender1 libxtst6
+
+      - name: Run Tests
+        run: ./mvnw test
+
+      - name: Build Jlink Custom Runtime
+        run: ./mvnw javafx:jlink
+
+      - name: Package Native Installer & Archive (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          mkdir -p dist
+          VERSION=$(echo "${{ github.ref_name }}" | sed -E 's/^v//' | grep -E -o '^[0-9]+(\.[0-9]+)*' || echo "1.0.0")
+          
+          # Create DMG installer
+          jpackage \
+            --name "ZXSpectrum" \
+            --app-version "${VERSION}" \
+            --vendor "nl.invokedynamic" \
+            --description "ZX Spectrum 128K Emulator" \
+            --runtime-image target/zxspectrum-runtime \
+            --module nl.invokedynamic.spectrum.emulator/nl.invokedynamic.spectrum.ui.SpectrumApp \
+            --java-options "--enable-native-access=javafx.graphics" \
+            --mac-package-identifier nl.invokedynamic.spectrum.emulator \
+            --mac-app-category public.app-category.games \
+            --dest dist \
+            --type dmg
+          
+          # Create portable zip
+          (cd target && zip -q -r "../dist/ZXSpectrum-${VERSION}-macos.zip" zxspectrum-runtime)
+
+      - name: Package Native Installer & Archive (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          mkdir -p dist
+          VERSION=$(echo "${{ github.ref_name }}" | sed -E 's/^v//' | grep -E -o '^[0-9]+(\.[0-9]+)*' || echo "1.0.0")
+          
+          # Create DEB package
+          jpackage \
+            --name "zxspectrum" \
+            --app-version "${VERSION}" \
+            --vendor "nl.invokedynamic" \
+            --description "ZX Spectrum 128K Emulator" \
+            --runtime-image target/zxspectrum-runtime \
+            --module nl.invokedynamic.spectrum.emulator/nl.invokedynamic.spectrum.ui.SpectrumApp \
+            --java-options "--enable-native-access=javafx.graphics" \
+            --dest dist \
+            --type deb \
+            --linux-shortcut
+          
+          # Create portable tar.gz
+          (cd target && tar -czf "../dist/ZXSpectrum-${VERSION}-linux.tar.gz" zxspectrum-runtime)
+
+      - name: Package Native Installer & Archive (Windows)
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          mkdir -p dist
+          VERSION=$(echo "${{ github.ref_name }}" | sed -E 's/^v//' | grep -E -o '^[0-9]+(\.[0-9]+)*' || echo "1.0.0")
+          
+          # Create MSI installer
+          jpackage \
+            --name "ZXSpectrum" \
+            --app-version "${VERSION}" \
+            --vendor "nl.invokedynamic" \
+            --description "ZX Spectrum 128K Emulator" \
+            --runtime-image target/zxspectrum-runtime \
+            --module nl.invokedynamic.spectrum.emulator/nl.invokedynamic.spectrum.ui.SpectrumApp \
+            --java-options "--enable-native-access=javafx.graphics" \
+            --dest dist \
+            --type msi \
+            --win-dir-chooser \
+            --win-menu \
+            --win-shortcut
+          
+          # Create portable zip
+          cd target && powershell Compress-Archive -Path zxspectrum-runtime -DestinationPath "../dist/ZXSpectrum-${VERSION}-windows.zip"
+
+      - name: Upload Release Assets
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: ${{ matrix.artifact-pattern }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
