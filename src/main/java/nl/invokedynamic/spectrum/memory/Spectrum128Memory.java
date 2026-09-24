@@ -51,7 +51,7 @@ public final class Spectrum128Memory implements MemoryBus {
 
     /**
      * Writes to 128K paging control port 0x7FFD.
-     * Decoded when (port & 0x8002) == 0.
+     * Decoded when {@code (port & 0x8002) == 0}.
      */
     public void writePort7ffd(int value) {
         if (pagingLocked) {

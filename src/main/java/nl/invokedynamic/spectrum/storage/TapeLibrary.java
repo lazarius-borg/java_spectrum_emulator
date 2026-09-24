@@ -3,12 +3,12 @@ package nl.invokedynamic.spectrum.storage;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -49,7 +49,7 @@ public final class TapeLibrary {
     public synchronized TapeLibraryEntry addOrUpdate(Path tapePath, int blockCount) {
         if (tapePath == null) return null;
         String absPath = tapePath.toAbsolutePath().normalize().toString();
-        String name = tapePath.getFileName() != null ? tapePath.getFileName().toString() : "Unknown.tap";
+        String name = Optional.ofNullable(tapePath.getFileName()).map(Path::toString).orElse("Unknown.tap");
 
         long size = 0;
         try {
@@ -168,11 +168,11 @@ public final class TapeLibrary {
         Matcher objMatcher = objectPattern.matcher(json);
         while (objMatcher.find()) {
             String block = objMatcher.group(1);
-            String name = extractString(namePattern, block, "Unknown");
-            String path = extractString(pathPattern, block, "");
-            int count = extractInt(countPattern, block, 0);
-            long size = extractLong(sizePattern, block, 0L);
-            long time = extractLong(timePattern, block, 0L);
+            String name = findMatch(namePattern, block).orElse("Unknown");
+            String path = findMatch(pathPattern, block).orElse("");
+            int count = findMatch(countPattern, block).map(Integer::parseInt).orElse(0);
+            long size = findMatch(sizePattern, block).map(Long::parseLong).orElse(0L);
+            long time = findMatch(timePattern, block).map(Long::parseLong).orElse(0L);
 
             if (!path.isEmpty()) {
                 result.add(new TapeLibraryEntry(unescapeJson(name), unescapeJson(path), count, size, time));
@@ -181,19 +181,9 @@ public final class TapeLibrary {
         return result;
     }
 
-    private static String extractString(Pattern pattern, String content, String defaultVal) {
+    private static Optional<String> findMatch(Pattern pattern, String content) {
         Matcher m = pattern.matcher(content);
-        return m.find() ? m.group(1) : defaultVal;
-    }
-
-    private static int extractInt(Pattern pattern, String content, int defaultVal) {
-        Matcher m = pattern.matcher(content);
-        return m.find() ? Integer.parseInt(m.group(1)) : defaultVal;
-    }
-
-    private static long extractLong(Pattern pattern, String content, long defaultVal) {
-        Matcher m = pattern.matcher(content);
-        return m.find() ? Long.parseLong(m.group(1)) : defaultVal;
+        return m.find() ? Optional.of(m.group(1)) : Optional.empty();
     }
 
     private static String escapeJson(String s) {

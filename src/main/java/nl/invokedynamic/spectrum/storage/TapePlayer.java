@@ -49,7 +49,6 @@ public final class TapePlayer {
 
     // Recording buffer
     private final List<TapFileFormat.TapBlock> recordedBlocks = new ArrayList<>();
-    private long lastMicEdgeCycles = 0;
     private boolean lastMicState = false;
 
     public void loadTape(List<TapFileFormat.TapBlock> newBlocks) {

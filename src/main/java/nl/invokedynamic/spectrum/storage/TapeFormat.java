@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Unified tape file loader supporting both .TAP and .TZX container formats.
@@ -15,7 +16,8 @@ public final class TapeFormat {
 
     public static List<TapFileFormat.TapBlock> load(Path path) throws IOException {
         byte[] bytes = Files.readAllBytes(path);
-        return parse(bytes, path.getFileName() != null ? path.getFileName().toString() : "");
+        String nameHint = Optional.ofNullable(path.getFileName()).map(Path::toString).orElse("");
+        return parse(bytes, nameHint);
     }
 
     public static List<TapFileFormat.TapBlock> load(InputStream is, String nameHint) throws IOException {

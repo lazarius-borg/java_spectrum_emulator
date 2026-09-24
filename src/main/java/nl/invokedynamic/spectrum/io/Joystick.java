@@ -3,7 +3,7 @@ package nl.invokedynamic.spectrum.io;
 /**
  * Emulates ZX Spectrum Joysticks:
  * - Kempston (Port 0x1F)
- * - Sinclair Interface II (Ports 1 & 2 mapped to number keys)
+ * - Sinclair Interface II (Ports 1 and 2 mapped to number keys)
  * - Cursor / Protek (mapped to cursor keys)
  */
 public final class Joystick {
@@ -44,6 +44,13 @@ public final class Joystick {
         return lockReason;
     }
 
+    /**
+     * Locks the joystick to a specific hardware interface because the running program
+     * has initiated direct polling on that port. Manual switching in menus is disabled until unlock.
+     *
+     * @param newType the hardware joystick type to lock to
+     * @param reason  human-readable description (e.g. "Port 0x1F")
+     */
     public void lockTo(JoystickType newType, String reason) {
         boolean changed = !lockedByProgram || this.type != newType;
         this.lockedByProgram = true;
@@ -58,6 +65,9 @@ public final class Joystick {
         }
     }
 
+    /**
+     * Unlocks the joystick interface, re-enabling manual user selection from menus.
+     */
     public void unlock() {
         if (lockedByProgram) {
             lockedByProgram = false;
@@ -68,6 +78,11 @@ public final class Joystick {
         }
     }
 
+    /**
+     * Sets the active joystick interface type. Ignored if locked by a running game.
+     *
+     * @param type the target joystick type
+     */
     public void setType(JoystickType type) {
         if (lockedByProgram) return; // Prevent manual alteration when locked by active program
         if (this.type != type) {
@@ -77,10 +92,15 @@ public final class Joystick {
         }
     }
 
+    /** Returns the active joystick interface type. */
     public JoystickType getType() {
         return type;
     }
 
+    /**
+     * Resets all direction and fire states, clears Kempston register, releases matrix keys,
+     * and unlocks the joystick interface.
+     */
     public void reset() {
         left = false;
         right = false;

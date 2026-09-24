@@ -5,6 +5,8 @@ import nl.invokedynamic.spectrum.io.Keyboard;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 
+import java.util.Optional;
+
 /**
  * Translates host JavaFX KeyEvents into ZX Spectrum 8x5 keyboard matrix presses
  * and joystick inputs.
@@ -73,7 +75,7 @@ public class KeyboardMapper {
     }
 
     public void setProfile(HostJoystickProfile profile) {
-        this.profile = profile != null ? profile : HostJoystickProfile.ARROWS_SPACE_CTRL;
+        this.profile = Optional.ofNullable(profile).orElse(HostJoystickProfile.ARROWS_SPACE_CTRL);
         joystick.reset();
     }
 
@@ -82,7 +84,7 @@ public class KeyboardMapper {
     }
 
     public void setTouchpadFireKey(TouchpadFireKey touchpadFireKey) {
-        this.touchpadFireKey = touchpadFireKey != null ? touchpadFireKey : TouchpadFireKey.SPACE;
+        this.touchpadFireKey = Optional.ofNullable(touchpadFireKey).orElse(TouchpadFireKey.SPACE);
     }
 
     public boolean isMapArrowsToCursorKeys() {

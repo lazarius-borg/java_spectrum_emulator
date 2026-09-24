@@ -5,6 +5,7 @@ import nl.invokedynamic.spectrum.memory.Spectrum128Memory;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Optional;
 
 /**
  * Loads ZX Spectrum ROMs from disk or provides a built-in test pattern fallback.
@@ -45,13 +46,13 @@ public final class RomLoader {
         }
 
         // Check for separate 16K ROM files
-        Path rom0Path = findRomFile(romsDir, "128-0.rom", "rom0.rom");
-        Path rom1Path = findRomFile(romsDir, "128-1.rom", "rom1.rom", "48.rom");
+        Optional<Path> rom0Path = findRomFile(romsDir, "128-0.rom", "rom0.rom");
+        Optional<Path> rom1Path = findRomFile(romsDir, "128-1.rom", "rom1.rom", "48.rom");
 
-        if (rom0Path != null && rom1Path != null) {
+        if (rom0Path.isPresent() && rom1Path.isPresent()) {
             try {
-                memory.loadRom(0, Files.readAllBytes(rom0Path));
-                memory.loadRom(1, Files.readAllBytes(rom1Path));
+                memory.loadRom(0, Files.readAllBytes(rom0Path.get()));
+                memory.loadRom(1, Files.readAllBytes(rom1Path.get()));
                 return true;
             } catch (IOException ignored) {}
         }
@@ -61,52 +62,53 @@ public final class RomLoader {
         return false;
     }
 
-    private static Path findRomFile(Path dir, String... names) {
+    private static Optional<Path> findRomFile(Path dir, String... names) {
         for (String name : names) {
             Path p = dir.resolve(name);
-            if (Files.exists(p)) return p;
+            if (Files.exists(p)) return Optional.of(p);
         }
-        return null;
+        return Optional.empty();
     }
 
     private static boolean tryLoadFromResources(Spectrum128Memory memory) {
         // Check for combined 32K ROM resource
-        byte[] combined = loadResourceBytes("/roms/128k.rom");
-        if (combined == null) combined = loadResourceBytes("/roms/zx128.rom");
+        Optional<byte[]> combined = loadResourceBytes("/roms/128k.rom")
+                .or(() -> loadResourceBytes("/roms/zx128.rom"));
 
-        if (combined != null && combined.length >= 32768) {
+        if (combined.isPresent() && combined.get().length >= 32768) {
+            byte[] bytes = combined.get();
             byte[] rom0 = new byte[16384];
             byte[] rom1 = new byte[16384];
-            System.arraycopy(combined, 0, rom0, 0, 16384);
-            System.arraycopy(combined, 16384, rom1, 0, 16384);
+            System.arraycopy(bytes, 0, rom0, 0, 16384);
+            System.arraycopy(bytes, 16384, rom1, 0, 16384);
             memory.loadRom(0, rom0);
             memory.loadRom(1, rom1);
             return true;
         }
 
         // Check for separate 16K ROM files in resources
-        byte[] rom0 = loadResourceBytes("/roms/128-0.rom");
-        if (rom0 == null) rom0 = loadResourceBytes("/roms/rom0.rom");
+        Optional<byte[]> rom0 = loadResourceBytes("/roms/128-0.rom")
+                .or(() -> loadResourceBytes("/roms/rom0.rom"));
 
-        byte[] rom1 = loadResourceBytes("/roms/128-1.rom");
-        if (rom1 == null) rom1 = loadResourceBytes("/roms/rom1.rom");
-        if (rom1 == null) rom1 = loadResourceBytes("/roms/48.rom");
+        Optional<byte[]> rom1 = loadResourceBytes("/roms/128-1.rom")
+                .or(() -> loadResourceBytes("/roms/rom1.rom"))
+                .or(() -> loadResourceBytes("/roms/48.rom"));
 
-        if (rom0 != null && rom1 != null) {
-            memory.loadRom(0, rom0);
-            memory.loadRom(1, rom1);
+        if (rom0.isPresent() && rom1.isPresent()) {
+            memory.loadRom(0, rom0.get());
+            memory.loadRom(1, rom1.get());
             return true;
         }
 
         return false;
     }
 
-    private static byte[] loadResourceBytes(String path) {
+    private static Optional<byte[]> loadResourceBytes(String path) {
         try (var is = RomLoader.class.getResourceAsStream(path)) {
-            if (is == null) return null;
-            return is.readAllBytes();
+            if (is == null) return Optional.empty();
+            return Optional.of(is.readAllBytes());
         } catch (IOException ignored) {
-            return null;
+            return Optional.empty();
         }
     }
 

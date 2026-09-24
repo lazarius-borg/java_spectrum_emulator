@@ -4,7 +4,6 @@ import nl.invokedynamic.spectrum.io.Keyboard;
 import nl.invokedynamic.spectrum.machine.SpectrumMachine;
 import org.junit.jupiter.api.Test;
 
-import java.io.File;
 import java.util.List;
 
 public class TapeMenuTraceTest {

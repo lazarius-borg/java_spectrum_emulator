@@ -4,12 +4,20 @@ import nl.invokedynamic.spectrum.memory.MemoryBus;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Disassembles bytes from memory at a given PC address into human-readable Z80 assembly lines.
  */
 public final class Disassembler {
 
+    /**
+     * Represents a disassembled instruction with its memory address, byte length, and text mnemonic.
+     *
+     * @param address  the 16-bit memory start address
+     * @param length   the instruction length in bytes
+     * @param mnemonic the formatted assembly mnemonic
+     */
     public record DisassembledInstruction(int address, int length, String mnemonic) {
         @Override
         public String toString() {
@@ -21,6 +29,11 @@ public final class Disassembler {
 
     /**
      * Decodes a list of consecutive instructions starting from the given PC.
+     *
+     * @param memory  the memory bus to read instructions from
+     * @param startPc the starting 16-bit program counter address
+     * @param count   the number of instructions to disassemble
+     * @return a list of disassembled instructions
      */
     public static List<DisassembledInstruction> disassemble(MemoryBus memory, int startPc, int count) {
         List<DisassembledInstruction> result = new ArrayList<>();
@@ -49,6 +62,12 @@ public final class Disassembler {
         return String.valueOf(d);
     }
 
+    /**
+     * Formats a decoded Z80 instruction record into a standard assembly mnemonic.
+     *
+     * @param instr the instruction record
+     * @return uppercase assembly mnemonic string
+     */
     public static String format(Instruction instr) {
         return switch (instr) {
             case Instruction.Nop _ -> "NOP";
@@ -133,7 +152,7 @@ public final class Disassembler {
             case Instruction.ResIndHl(int bit, _) -> "RES  " + bit + ", (HL)";
             case Instruction.ResIndOffset(int bit, var idx, int d, _) -> "RES  " + bit + ", (" + idx + formatDisp(d) + ")";
             case Instruction.BitOpOffsetWithReg(_, var rot, int bit, var idx, int d, var tgt, _) ->
-                (rot != null ? rot.toString() : "BITOP " + bit) + " (" + idx + formatDisp(d) + ")," + tgt;
+                Optional.ofNullable(rot).map(Object::toString).orElse("BITOP " + bit) + " (" + idx + formatDisp(d) + ")," + tgt;
 
             // Jumps, Calls, Returns
             case Instruction.JpImm(int target, _) -> String.format("JP   0x%04X", target);

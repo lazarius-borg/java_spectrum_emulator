@@ -24,6 +24,7 @@ import java.nio.file.Path;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Controller for the FXML-based ZX Spectrum UI.
@@ -814,7 +815,7 @@ public final class SpectrumController {
                     if (tape.getBlocks().isEmpty()) {
                         tapeLabel.setText("Tape: Empty");
                     } else {
-                        String name = currentTapeFileName != null ? currentTapeFileName : "Loaded";
+                        String name = Optional.ofNullable(currentTapeFileName).orElse("Loaded");
                         tapeLabel.setText(String.format("Tape: %s [%s %d/%d]",
                             name, tape.getState(), tape.getCurrentBlockIndex() + 1, tape.getBlocks().size()));
                     }

@@ -21,7 +21,7 @@ MAC_BUNDLE_ID="nl.invokedynamic.spectrum.emulator"
 
 # Extract version from pom.xml and normalize for jpackage (must be digits and dots)
 RAW_VERSION=$(grep -m1 '<version>' "${ROOT_DIR}/pom.xml" | sed -E 's/.*<version>(.*)<\/version>.*/\1/')
-APP_VERSION=$(echo "${RAW_VERSION}" | sed -E 's/-SNAPSHOT//' | grep -E -o '^[0-9]+(\.[0-9]+)*' || echo "1.0.0")
+APP_VERSION=$(echo "${RAW_VERSION}" | sed -E 's/-SNAPSHOT//' | grep -E -o '^[0-9]+(\.[0-9]+)*' || echo "0.1.0")
 
 RUN_TESTS=true
 BUILD_ALL=true

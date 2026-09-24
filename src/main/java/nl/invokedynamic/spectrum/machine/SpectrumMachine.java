@@ -55,6 +55,11 @@ public final class SpectrumMachine {
         reset();
     }
 
+    /**
+     * Changes the hardware model (128K or 48K), updates clock timing, and resets the machine.
+     *
+     * @param model the target machine architecture model
+     */
     public void setModel(MachineModel model) {
         this.model = model;
         updateModelTiming();
@@ -65,6 +70,10 @@ public final class SpectrumMachine {
         this.cyclesPerAudioSample = (double) model.getClockFrequencyHz() / AudioMixer.SAMPLE_RATE;
     }
 
+    /**
+     * Performs a full machine reset: resets CPU, memory banks, display, sound generators,
+     * keyboard, joystick lock state, and audio sample accumulator.
+     */
     public void reset() {
         cpu.reset();
         memory.reset();

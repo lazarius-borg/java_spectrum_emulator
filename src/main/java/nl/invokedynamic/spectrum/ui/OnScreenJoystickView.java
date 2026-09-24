@@ -15,7 +15,7 @@ import javafx.scene.paint.RadialGradient;
 import javafx.scene.paint.Stop;
 
 /**
- * Interactive retro arcade joystick & fire button widget.
+ * Interactive retro arcade joystick and fire button widget.
  *
  * Supports:
  * - Direct mouse/trackpad drag-to-steer in 8 directions with authentic deadzone.

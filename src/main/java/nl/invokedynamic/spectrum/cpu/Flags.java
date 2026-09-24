@@ -13,13 +13,21 @@ package nl.invokedynamic.spectrum.cpu;
  * Bit 0: C  (Carry)
  */
 public final class Flags {
+    /** Carry flag mask (bit 0). */
     public static final int C_MASK  = 0x01;
+    /** Add/Subtract flag mask (bit 1, 1 for subtract). */
     public static final int N_MASK  = 0x02;
+    /** Parity / Overflow flag mask (bit 2). */
     public static final int PV_MASK = 0x04;
+    /** Undocumented copy of result bit 3 (bit 3). */
     public static final int F3_MASK = 0x08;
+    /** Half Carry flag mask (bit 4). */
     public static final int H_MASK  = 0x10;
+    /** Undocumented copy of result bit 5 (bit 5). */
     public static final int F5_MASK = 0x20;
+    /** Zero flag mask (bit 6). */
     public static final int Z_MASK  = 0x40;
+    /** Sign flag mask (bit 7, 1 for negative). */
     public static final int S_MASK  = 0x80;
 
     /**

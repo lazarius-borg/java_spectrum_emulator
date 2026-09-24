@@ -1,11 +1,9 @@
 package nl.invokedynamic.spectrum.storage;
 
-import nl.invokedynamic.spectrum.cpu.Flags;
 import nl.invokedynamic.spectrum.machine.SpectrumMachine;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
-import java.nio.file.Path;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;

@@ -18,10 +18,12 @@ public final class Z80Cpu {
         this.executor = new InstructionExecutor();
     }
 
+    /** Returns the underlying operational CPU state and registers. */
     public CpuState getState() {
         return state;
     }
 
+    /** Resets the CPU state, registers, and interrupts to power-on defaults. */
     public void reset() {
         state.reset();
     }

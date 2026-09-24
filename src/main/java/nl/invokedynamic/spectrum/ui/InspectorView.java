@@ -20,6 +20,9 @@ import java.util.List;
  */
 public final class InspectorView extends VBox {
 
+    /**
+     * Diagnostic inspection categories available in the inspector panel.
+     */
     public enum InspectorTab {
         CPU("CPU"),
         MEMORY("Memory"),
@@ -81,6 +84,11 @@ public final class InspectorView extends VBox {
     private final Label lblNoiseEnv = new Label();
     private final Label lblBeeper = new Label();
 
+    /**
+     * Constructs a new InspectorView tied to the provided machine instance.
+     *
+     * @param machine the Spectrum machine coordinator
+     */
     public InspectorView(SpectrumMachine machine) {
         this.machine = machine;
         getStyleClass().add("retro-panel");
@@ -143,6 +151,11 @@ public final class InspectorView extends VBox {
         updateState();
     }
 
+    /**
+     * Switches the active inspector subtab.
+     *
+     * @param tab the tab category to display
+     */
     public void selectTab(InspectorTab tab) {
         this.activeTab = tab;
         InspectorTab[] tabs = InspectorTab.values();

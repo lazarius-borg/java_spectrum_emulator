@@ -1,12 +1,10 @@
 package nl.invokedynamic.spectrum.storage;
 
 import nl.invokedynamic.spectrum.cpu.CpuState;
-import nl.invokedynamic.spectrum.cpu.Registers;
 import nl.invokedynamic.spectrum.memory.Spectrum128Memory;
 import nl.invokedynamic.spectrum.sound.Ay38912;
 import nl.invokedynamic.spectrum.ula.UlaDisplay;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
