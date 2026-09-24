@@ -12,33 +12,9 @@ A high-performance, cycle-accurate software implementation of the **Sinclair ZX 
 
 ## 📸 Interface Preview
 
-<!-- Screenshot placeholder: Provide or replace screenshot.png in repo -->
-```
-+-----------------------------------------------------------------------------------------+
-| ZX Spectrum 128K Emulator - [ 0.1.0 ]                                          [ - + x ]|
-+-----------------------------------------------------------------------------------------+
-| File   Machine   View   Input   Tape   Help                                             |
-+------------------------------------+----------------------------------------------------+
-|                                    | -[ ⚙ Inspector ]-                        [ 128K ]  |
-|                                    | [ CPU ] [ Memory ] [ Sound ] [ All ]               |
-|                                    |----------------------------------------------------|
-|                                    | PC: 0x8000   AF: 0x0044   BC: 0x0000   DE: 0x0000  |
-|                                    | HL: 0x5800   SP: 0xFFFF   IX: 0x0000   IY: 0x5C3A  |
-|       [ ZX Spectrum Display ]      | Flags: [----Z---]  IM: 1  IFF1: 1  HALT: 0         |
-|         (256 x 192 Border)         | Disassembly:                                       |
-|                                    |   0x8000:  LD   A, 0x07                            |
-|                                    |   0x8002:  OUT  (0xFE), A                          |
-|                                    |   0x8004:  JR   -4                                 |
-|                                    |----------------------------------------------------|
-|                                    | RAM Banks: [Bank 5: 0x4000] [Bank 2: 0x8000]       |
-|                                    | ROM Active: ROM 1 (48K BASIC)                      |
-|                                    | AY-3-8912: ChA: 440Hz | ChB: OFF | ChC: OFF        |
-+------------------------------------+----------------------------------------------------+
-| 📼 Tape Deck: [ ▶ PLAY ] [ ■ STOP ] [ ⟲ REWIND ] [ ⚡ Instant Load: ON ]   Tape: Ah-Harvest |
-+-----------------------------------------------------------------------------------------+
-| ⌨ Interactive Spectrum Keyboard: [ 1 2 3 4 5 6 7 8 9 0 ] [ Q W E R T Y U I O P ] ...    |
-+-----------------------------------------------------------------------------------------+
-```
+<p align="center">
+  <img src="docs/images/zx-spectrum-0.1.0.png" alt="ZX Spectrum 128K Emulator UI" width="95%" />
+</p>
 
 ---
 
