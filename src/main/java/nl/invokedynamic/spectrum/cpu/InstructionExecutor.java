@@ -233,26 +233,31 @@ public final class InstructionExecutor {
         boolean carry = (f & Flags.C_MASK) != 0;
         boolean halfCarry = (f & Flags.H_MASK) != 0;
 
-        if ((f & Flags.N_MASK) == 0) {
-            if (halfCarry || (a & 0x0F) > 9) correction |= 0x06;
-            if (carry || a > 0x99) {
-                correction |= 0x60;
-                carry = true;
-            }
-            a = (a + correction) & 0xFF;
-        } else {
-            if (halfCarry) correction |= 0x06;
-            if (carry) correction |= 0x60;
-            a = (a - correction) & 0xFF;
+        if ((a & 0x0F) > 0x09 || halfCarry) {
+            correction += 0x06;
         }
 
-        f = (f & Flags.N_MASK) | Flags.SZ53_TABLE[a] | Flags.PARITY_TABLE[a];
-        if (carry) f |= Flags.C_MASK;
-        if (((r.getA() ^ a) & 0x10) != 0) f |= Flags.H_MASK;
+        if (a > 0x99 || carry) {
+            correction += 0x60;
+            carry = true;
+        }
+
+        boolean subtraction = (f & Flags.N_MASK) != 0;
+        if (subtraction) {
+            halfCarry = halfCarry && ((a & 0x0F) < 0x06);
+            a = (a - correction) & 0xFF;
+        } else {
+            halfCarry = (a & 0x0F) > 0x09;
+            a = (a + correction) & 0xFF;
+        }
+
+        int newF = (f & Flags.N_MASK) | Flags.SZ53_TABLE[a] | Flags.PARITY_TABLE[a];
+        if (carry) newF |= Flags.C_MASK;
+        if (halfCarry) newF |= Flags.H_MASK;
 
         r.setA(a);
-        r.setF(f);
-        cpu.setQ(f);
+        r.setF(newF);
+        cpu.setQ(newF);
         return cycles;
     }
 

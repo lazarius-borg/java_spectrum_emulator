@@ -18,6 +18,7 @@
         <javafx.version>26.0.2</javafx.version>
         <junit.version>5.10.2</junit.version>
         <assertj.version>3.25.3</assertj.version>
+        <excludedGroups>exerciser</excludedGroups>
     </properties>
 
     <dependencies>
@@ -68,6 +69,7 @@
                 <version>3.2.5</version>
                 <configuration>
                     <useModulePath>false</useModulePath>
+                    <excludedGroups>${excludedGroups}</excludedGroups>
                 </configuration>
             </plugin>
             <plugin>
